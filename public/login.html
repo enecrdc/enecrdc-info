@@ -14,6 +14,5 @@ const email=document.getElementById('email').value,password=document.getElementB
 const {data,error}=await client.auth.signInWithPassword({email,password});
 if(error){msg.textContent='Erreur : '+error.message;btn.textContent='Se connecter';return;}
 const {data:profile}=await client.from('profiles').select('full_name,role,is_active').eq('id',data.user.id).single();
-if(!profile||!profile.is_active){msg.textContent='Compte désactivé.';btn.textContent='Se connecter';return;}
-msg.textContent='Bienvenue '+profile.full_name+' - Rôle : '+profile.role+'. Connexion réussie.';btn.textContent='Connecté ✅';});
-</script></body></html>
+if(profile && profile.is_active===false){msg.textContent='Compte désactivé.';btn.textContent='Se connecter';return;}
+if(!profile){msg.textContent='Connecté ✅ - Profil à compléter dans Supabase (rôle à vérifier).';btn.textContent='Connecté ✅';return;}
