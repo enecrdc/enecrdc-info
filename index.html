@@ -28,7 +28,14 @@ footer a{color:#C9A227;text-decoration:none}
 <header><strong>ENEC<span>RDC</span>.INFO</strong><a href="login.html">Espace Rédaction</a></header>
 <div class="hero"><h1>L'actualité du Nord-Kivu <span>autrement</span></h1><p>Goma • Nord-Kivu • RDC — Des articles vérifiés, de proximité.</p></div>
 <div class="wrap">
-<div class="cat"><button class="active" onclick="filterCat('all',this)">Tous</button><button onclick="filterCat('politique',this)">Politique</button><button onclick="filterCat('societe',this)">Société</button><button onclick="filterCat('sport',this)">Sport</button><button onclick="filterCat('culture',this)">Culture</button></div>
+<div class="cat">
+<button class="active" onclick="filterCat('all',this)">Tous</button>
+<button onclick="filterCat('a-la-une',this)">À la une</button>
+<button onclick="filterCat('actualites-locales',this)">Actualités locales</button>
+<button onclick="filterCat('politique',this)">Politique</button>
+<button onclick="filterCat('sport',this)">Sport</button>
+<button onclick="filterCat('culture',this)">Culture</button>
+</div>
 <div id="list"><div class="empty">Chargement des articles...</div></div>
 <div class="card"><div class="card-body"><h2>À propos d'ENECRDC.INFO</h2><p>ENECRDC.INFO est un média d'information au service de Goma, du Nord-Kivu et de toute la RDC. Notre rédaction travaille chaque jour pour vous apporter une information vérifiée et de proximité.</p><p><strong>Contact :</strong> redaction@enecrdc.info • Goma, Nord-Kivu, RDC</p></div></div>
 </div>
@@ -39,19 +46,21 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allArticles = [];
 async function load(){
-  const {data, error} = await client.from('articles').select('title,excerpt,content,status,created_at,category_id').eq('status','publie').order('created_at',{ascending:false}).limit(20);
+  const {data, error} = await client.from('articles').select('title,excerpt,content,status,created_at,category:categories(name,slug)').eq('status','publie').order('created_at',{ascending:false}).limit(20);
   const el = document.getElementById('list');
   if(error){ el.innerHTML = '<div class="empty">Impossible de charger les articles : '+error.message+'</div>'; return; }
   if(!data || !data.length){ el.innerHTML = '<div class="empty">Aucun article publié pour le moment. Revenez bientôt.</div>'; return; }
   allArticles = data;
   render('all');
 }
+function getSlug(a){ return (a.category && a.category.slug) ? a.category.slug : ''; }
+function getName(a){ return (a.category && a.category.name) ? a.category.name : 'À la une'; }
 function render(cat){
   const el = document.getElementById('list');
   let list = allArticles;
-  if(cat !== 'all'){ list = allArticles.filter(a => (a.category_id||'').toLowerCase().includes(cat)); }
+  if(cat !== 'all'){ list = allArticles.filter(a => getSlug(a).includes(cat) || getName(a).toLowerCase().includes(cat)); }
   if(!list.length){ el.innerHTML = '<div class="empty">Aucun article dans cette catégorie.</div>'; return; }
-  el.innerHTML = list.map(a => '<div class="card"><div class="card-body"><span class="badge">PUBLIÉ</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p>'+a.content.substring(0,400)+'</p><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
+  el.innerHTML = list.map(a => '<div class="card"><div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p>'+a.content.substring(0,400)+'</p><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
 }
 function filterCat(cat, btn){ document.querySelectorAll('.cat button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(cat); }
 load();
