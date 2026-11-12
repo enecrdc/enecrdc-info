@@ -14,6 +14,7 @@ input,textarea,select{width:100%;padding:12px;border-radius:8px;border:1px solid
 button{background:#0A1F3D;color:#fff;padding:12px;border-radius:8px;font-weight:700;border:none;cursor:pointer}
 #msg{font-size:13px;background:#F4F5F7;padding:10px;border-radius:8px;display:none}
 label{font-size:13px;font-weight:700}
+img.preview{width:100%;border-radius:8px;margin-top:8px;display:none}
 </style>
 </head>
 <body>
@@ -22,6 +23,7 @@ label{font-size:13px;font-weight:700}
 <div class="box"><h3>Nouvel article</h3><form id="f">
 <label>Titre</label><input id="title" required placeholder="Titre de l'article">
 <label>Catégorie</label><select id="category"><option value="">Chargement des catégories...</option></select>
+<label>Photo de couverture</label><input type="file" id="photo" accept="image/*"><img id="preview" class="preview"><small>Choisissez une photo depuis votre téléphone. Elle sera téléversée automatiquement.</small>
 <label>Résumé</label><textarea id="excerpt" rows="2" placeholder="Résumé en 2-3 lignes"></textarea>
 <label>Contenu</label><textarea id="content" rows="6" required placeholder="Votre article complet ici..."></textarea>
 <button type="submit" id="btn">Enregistrer en brouillon</button><p id="msg"></p></form></div>
@@ -30,6 +32,11 @@ label{font-size:13px;font-weight:700}
 const SUPABASE_URL = "https://vxcqmskiaxttipmiccku.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+document.getElementById('photo').addEventListener('change', (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  const url = URL.createObjectURL(f);
+  const img = document.getElementById('preview'); img.src = url; img.style.display = 'block';
+});
 async function loadCategories(){
   const {data} = await client.from('categories').select('id,name,slug').order('name');
   const sel = document.getElementById('category');
@@ -47,10 +54,10 @@ async function check(){
   loadCategories(); loadArticles(user.id);
 }
 async function loadArticles(uid){
-  const {data} = await client.from('articles').select('title,status,created_at,category:categories(name)').eq('author_id',uid).order('created_at',{ascending:false}).limit(20);
+  const {data} = await client.from('articles').select('title,status,created_at,cover_image_url,category:categories(name)').eq('author_id',uid).order('created_at',{ascending:false}).limit(20);
   const el = document.getElementById('list');
   if(!data || !data.length){ el.innerHTML = 'Aucun article pour le moment.'; return; }
-  el.innerHTML = data.map(a => '<p>• <strong>' + a.title + '</strong> - ' + (a.category ? a.category.name : 'Sans catégorie') + ' - ' + a.status + ' - ' + new Date(a.created_at).toLocaleDateString('fr-FR') + ' <button onclick="publishArticle(\''+a.title.replace(/'/g,"\\'")+'\')" style="padding:4px 8px;font-size:12px;margin-left:6px;">Publier</button></p>').join('');
+  el.innerHTML = data.map(a => '<p>• <strong>' + a.title + '</strong> - ' + (a.category ? a.category.name : 'Sans catégorie') + ' - ' + a.status + ' ' + (a.cover_image_url ? '📷' : '') + ' - ' + new Date(a.created_at).toLocaleDateString('fr-FR') + ' <button onclick="publishArticle(\''+a.title.replace(/'/g,"\\'")+'\')" style="padding:4px 8px;font-size:12px;margin-left:6px;">Publier</button></p>').join('');
 }
 async function publishArticle(title){
   const {error} = await client.from('articles').update({status:'publie', published_at: new Date().toISOString()}).ilike('title', title);
@@ -60,14 +67,25 @@ async function logout(){ await client.auth.signOut(); window.location.href='logi
 document.getElementById('f').addEventListener('submit', async (e) => {
   e.preventDefault();
   const {data:{user}} = await client.auth.getUser(); if(!user) return;
+  const msg = document.getElementById('msg'); msg.style.display='block'; msg.textContent = 'Téléversement de la photo...';
   const title = document.getElementById('title').value;
   const excerpt = document.getElementById('excerpt').value;
   const content = document.getElementById('content').value;
   const category_id = document.getElementById('category').value || null;
   const slug = title.toLowerCase().replace(/[^a-z0-9à-ÿ]+/gi,'-').replace(/^-|-$/g,'') + '-' + Date.now().toString().slice(-5);
-  const msg = document.getElementById('msg'); msg.style.display='block';
-  const {error} = await client.from('articles').insert({title, slug, excerpt, content, author_id: user.id, category_id, status:'brouillon'});
-  if(error){ msg.textContent = 'Erreur : ' + error.message; } else { msg.textContent = '✅ Article créé en BROUILLON. Cliquez sur Publier dans Mes articles pour le mettre en ligne.'; document.getElementById('f').reset(); loadArticles(user.id); }
+  let cover_image_url = null;
+  const file = document.getElementById('photo').files[0];
+  if(file){
+    const fileName = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const {error: upErr} = await client.storage.from('media').upload(fileName, file);
+    if(upErr){ msg.textContent = 'Erreur photo : ' + upErr.message + ' - On enregistre sans photo.'; }
+    else {
+      const {data: pub} = client.storage.from('media').getPublicUrl(fileName);
+      cover_image_url = pub.publicUrl;
+    }
+  }
+  const {error} = await client.from('articles').insert({title, slug, excerpt, content, author_id: user.id, category_id, cover_image_url, status:'brouillon'});
+  if(error){ msg.textContent = 'Erreur : ' + error.message; } else { msg.textContent = '✅ Article créé en BROUILLON' + (cover_image_url ? ' avec photo 📷.' : '.'); document.getElementById('f').reset(); document.getElementById('preview').style.display='none'; loadArticles(user.id); }
 });
 check();
 </script>
