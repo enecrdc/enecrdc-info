@@ -47,7 +47,7 @@ document.getElementById('f').addEventListener('submit', async (e) => {
   const content = document.getElementById('content').value;
   const slug = title.toLowerCase().replace(/[^a-z0-9à-ÿ]+/gi,'-').replace(/^-|-$/g,'') + '-' + Date.now().toString().slice(-5);
   const msg = document.getElementById('msg'); msg.style.display='block';
-  const {error} = await client.from('articles').insert({title, slug, excerpt, content, author_id: user.id, status:'draft'});
+  const {error} = await client.from('articles').insert({title, slug, excerpt, content, author_id: user.id, status:'brouillon'});
   if(error){ msg.textContent = 'Erreur : ' + error.message; } else { msg.textContent = '✅ Article créé en BROUILLON.'; document.getElementById('f').reset(); loadArticles(user.id); }
 });
 check();
