@@ -60,7 +60,7 @@ function render(cat){
   let list = allArticles;
   if(cat !== 'all'){ list = allArticles.filter(a => getSlug(a).includes(cat) || getName(a).toLowerCase().includes(cat)); }
   if(!list.length){ el.innerHTML = '<div class="empty">Aucun article dans cette catégorie.</div>'; return; }
-  el.innerHTML = list.map(a => '<div class="card"><div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p>'+a.content.substring(0,400)+'</p><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
+  el.innerHTML = list.map(a => '<div class="card"><div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p>'<p id="prev-'+i+'">'+a.content.substring(0,400)+'...</p><p id="full-'+i+'" style="display:none;">'+a.content+'</p><button onclick="document.getElementById(\'prev-'+i+'\').style.display=\'none\';document.getElementById(\'full-'+i+'\').style.display=\'block\';this.style.display=\'none\';" style="background:#0A1F3D;color:#fff;padding:8px 12px;border-radius:20px;border:none;">Lire la suite →</button><small>'</p><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
 }
 function filterCat(cat, btn){ document.querySelectorAll('.cat button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(cat); }
 load();
