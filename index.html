@@ -1,14 +1,60 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ENECRDC.INFO - Info RDC, Bukavu, Sud-Kivu</title>
-<style>body{font-family:Arial,sans-serif;background:#F4F5F7;margin:0}.top{background:#0A1F3D;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}.logo{font-size:22px;font-weight:900}.logo span{color:#C9A227}.flash{background:#D32F2F;color:#fff;padding:8px 16px;font-weight:700;font-size:14px}.nav{background:#fff;display:flex;gap:8px;padding:12px 16px;overflow-x:auto;border-bottom:3px solid #C9A227;white-space:nowrap}.nav a{color:#0A1F3D;font-weight:600;font-size:14px;padding:6px 12px;border-radius:20px;background:#F4F5F7;text-decoration:none}.hero{background:#0A1F3D;color:#fff;padding:28px 16px}.hero h1{font-size:28px}.section{padding:20px 16px}.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px}.badge{background:#C9A227;color:#0A1F3D;font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px}.footer{background:#0A1F3D;color:#fff;padding:24px 16px;text-align:center;font-size:13px;margin-top:20px}</style>
-</head><body>
-<header class="top"><div class="logo">ENEC<span>RDC</span>.INFO</div><a href="login.html" style="background:#C9A227;color:#0A1F3D;padding:8px 14px;border-radius:20px;font-weight:700;text-decoration:none;">Espace Rédaction</a></header>
-<div class="flash">FLASH • Info en continu — RDC • Sud-Kivu • Bukavu</div>
-<nav class="nav"><a href="#">À la une</a><a href="#">Politique</a><a href="#">Économie</a><a href="#">Sécurité</a><a href="#">Société</a><a href="#">Sud-Kivu</a><a href="#">Bukavu</a><a href="#">Nord-Kivu</a><a href="#">Kinshasa</a><a href="#">Provinces</a><a href="#">Culture</a><a href="#">Sport</a><a href="#">Éducation</a><a href="#">Santé</a><a href="#">Environnement</a><a href="#">Développement</a><a href="#">International</a><a href="#">Diaspora</a><a href="#">Opinions</a></nav>
-<section class="hero"><h1>Info RDC, Bukavu et Sud-Kivu — Vérifiée, de terrain.</h1><p>Actualité générale et développement. 19 rubriques. 26 provinces.</p></section>
-<section class="section"><h2>À la une</h2>
-<div class="card"><span class="badge">SUD-KIVU</span><h3>Bukavu : l'actualité de la province, au plus près du terrain</h3><p>Les articles réels seront affichés ici dès la publication depuis l'espace Admin.</p></div>
-<div class="card"><span class="badge">DÉVELOPPEMENT</span><h3>Développement : les projets qui changent la vie au Sud-Kivu</h3><p>Économie, éducation, santé, environnement — notre ligne éditoriale.</p></div>
-</section>
-<footer class="footer"><strong>ENECRDC.INFO</strong><br>Presse numérique — RDC • Bukavu • Sud-Kivu<br>© 2026 ENECRDC.INFO</footer>
-</body></html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENECRDC.INFO - L'actualité du Nord-Kivu autrement</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#F4F5F7;color:#111}
+header{background:#0A1F3D;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+header strong{font-size:20px}header strong span{color:#C9A227}
+header a{color:#fff;text-decoration:none;background:#C9A227;color:#0A1F3D;padding:8px 12px;border-radius:20px;font-weight:700;font-size:13px}
+.hero{background:#0A1F3D;color:#fff;padding:28px 16px;text-align:center}
+.hero h1{font-size:28px;margin:0 0 8px}.hero h1 span{color:#C9A227}.hero p{opacity:.9;margin:0}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card-body{padding:16px}.badge{background:#C9A227;color:#0A1F3D;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
+.card h2{margin:10px 0 6px;font-size:20px}.card p{color:#444;line-height:1.6}
+.card small{color:#888}.empty{background:#fff;padding:20px;border-radius:12px;text-align:center;color:#555}
+footer{background:#0A1F3D;color:#fff;padding:24px 16px;text-align:center;margin-top:20px}
+footer a{color:#C9A227;text-decoration:none}
+.cat{margin:12px 0;display:flex;gap:8px;flex-wrap:wrap}
+.cat button{padding:8px 12px;border-radius:20px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.cat button.active{background:#0A1F3D;color:#fff}
+</style>
+</head>
+<body>
+<header><strong>ENEC<span>RDC</span>.INFO</strong><a href="login.html">Espace Rédaction</a></header>
+<div class="hero"><h1>L'actualité du Nord-Kivu <span>autrement</span></h1><p>Goma • Nord-Kivu • RDC — Des articles vérifiés, de proximité.</p></div>
+<div class="wrap">
+<div class="cat"><button class="active" onclick="filterCat('all',this)">Tous</button><button onclick="filterCat('politique',this)">Politique</button><button onclick="filterCat('societe',this)">Société</button><button onclick="filterCat('sport',this)">Sport</button><button onclick="filterCat('culture',this)">Culture</button></div>
+<div id="list"><div class="empty">Chargement des articles...</div></div>
+<div class="card"><div class="card-body"><h2>À propos d'ENECRDC.INFO</h2><p>ENECRDC.INFO est un média d'information au service de Goma, du Nord-Kivu et de toute la RDC. Notre rédaction travaille chaque jour pour vous apporter une information vérifiée et de proximité.</p><p><strong>Contact :</strong> redaction@enecrdc.info • Goma, Nord-Kivu, RDC</p></div></div>
+</div>
+<footer><strong>ENEC<span style="color:#C9A227">RDC</span>.INFO</strong><br><br><a href="index.html">Accueil</a> • <a href="login.html">Espace Rédaction</a><br><br><small>© 2026 ENECRDC.INFO - Tous droits réservés.</small></footer>
+<script>
+const SUPABASE_URL = "https://vxcqmskiaxttipmiccku.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let allArticles = [];
+async function load(){
+  const {data, error} = await client.from('articles').select('title,excerpt,content,status,created_at,category_id').eq('status','publie').order('created_at',{ascending:false}).limit(20);
+  const el = document.getElementById('list');
+  if(error){ el.innerHTML = '<div class="empty">Impossible de charger les articles : '+error.message+'</div>'; return; }
+  if(!data || !data.length){ el.innerHTML = '<div class="empty">Aucun article publié pour le moment. Revenez bientôt.</div>'; return; }
+  allArticles = data;
+  render('all');
+}
+function render(cat){
+  const el = document.getElementById('list');
+  let list = allArticles;
+  if(cat !== 'all'){ list = allArticles.filter(a => (a.category_id||'').toLowerCase().includes(cat)); }
+  if(!list.length){ el.innerHTML = '<div class="empty">Aucun article dans cette catégorie.</div>'; return; }
+  el.innerHTML = list.map(a => '<div class="card"><div class="card-body"><span class="badge">PUBLIÉ</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p>'+a.content.substring(0,400)+'</p><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
+}
+function filterCat(cat, btn){ document.querySelectorAll('.cat button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(cat); }
+load();
+</script>
+</body>
+</html>
