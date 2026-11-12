@@ -10,33 +10,51 @@ body{font-family:Arial,sans-serif;background:#F4F5F7;margin:0;padding:16px}
 .top{background:#0A1F3D;color:#fff;padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
 .top span{color:#C9A227}
 .box{background:#fff;padding:16px;border-radius:12px;margin-top:12px}
-input,textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #ddd;margin:8px 0;box-sizing:border-box}
+input,textarea,select{width:100%;padding:12px;border-radius:8px;border:1px solid #ddd;margin:8px 0;box-sizing:border-box}
 button{background:#0A1F3D;color:#fff;padding:12px;border-radius:8px;font-weight:700;border:none;cursor:pointer}
 #msg{font-size:13px;background:#F4F5F7;padding:10px;border-radius:8px;display:none}
+label{font-size:13px;font-weight:700}
 </style>
 </head>
 <body>
 <div class="top"><div><strong>ENEC<span>RDC</span>.INFO</strong> - Espace Admin</div><button onclick="logout()" style="background:#C9A227;color:#0A1F3D;">Déconnexion</button></div>
 <div class="box"><h2 id="welcome">Chargement...</h2><p id="role"></p></div>
-<div class="box"><h3>Nouvel article - Brouillon</h3><form id="f"><input id="title" required placeholder="Titre de l'article"><textarea id="excerpt" rows="2" placeholder="Résumé en 2-3 lignes"></textarea><textarea id="content" rows="6" required placeholder="Votre article complet ici..."></textarea><button type="submit" id="btn">Enregistrer en brouillon</button><p id="msg"></p></form></div>
+<div class="box"><h3>Nouvel article</h3><form id="f">
+<label>Titre</label><input id="title" required placeholder="Titre de l'article">
+<label>Catégorie</label><select id="category"><option value="">Chargement des catégories...</option></select>
+<label>Résumé</label><textarea id="excerpt" rows="2" placeholder="Résumé en 2-3 lignes"></textarea>
+<label>Contenu</label><textarea id="content" rows="6" required placeholder="Votre article complet ici..."></textarea>
+<button type="submit" id="btn">Enregistrer en brouillon</button><p id="msg"></p></form></div>
 <div class="box"><h3>Mes articles</h3><div id="list">Chargement...</div></div>
 <script>
 const SUPABASE_URL = "https://vxcqmskiaxttipmiccku.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function loadCategories(){
+  const {data} = await client.from('categories').select('id,name,slug').order('name');
+  const sel = document.getElementById('category');
+  if(!data || !data.length){ sel.innerHTML = '<option value="">Aucune catégorie</option>'; return; }
+  sel.innerHTML = data.map(c => '<option value="'+c.id+'">'+c.name+'</option>').join('');
+  const def = data.find(c => c.slug === 'a-la-une');
+  if(def) sel.value = def.id;
+}
 async function check(){
   const {data:{user}} = await client.auth.getUser();
   if(!user){ window.location.href='login.html'; return; }
   const {data:profile} = await client.from('profiles').select('full_name,role').eq('id',user.id).single();
   document.getElementById('welcome').textContent = 'Bienvenue ' + (profile ? profile.full_name : user.email);
   document.getElementById('role').textContent = 'Rôle : ' + (profile ? profile.role : '-');
-  loadArticles(user.id);
+  loadCategories(); loadArticles(user.id);
 }
 async function loadArticles(uid){
-  const {data} = await client.from('articles').select('title,status,created_at').eq('author_id',uid).order('created_at',{ascending:false}).limit(10);
+  const {data} = await client.from('articles').select('title,status,created_at,category:categories(name)').eq('author_id',uid).order('created_at',{ascending:false}).limit(20);
   const el = document.getElementById('list');
   if(!data || !data.length){ el.innerHTML = 'Aucun article pour le moment.'; return; }
-  el.innerHTML = data.map(a => '<p>• <strong>' + a.title + '</strong> - ' + a.status + ' - ' + new Date(a.created_at).toLocaleDateString('fr-FR') + '</p>').join('');
+  el.innerHTML = data.map(a => '<p>• <strong>' + a.title + '</strong> - ' + (a.category ? a.category.name : 'Sans catégorie') + ' - ' + a.status + ' - ' + new Date(a.created_at).toLocaleDateString('fr-FR') + ' <button onclick="publishArticle(\''+a.title.replace(/'/g,"\\'")+'\')" style="padding:4px 8px;font-size:12px;margin-left:6px;">Publier</button></p>').join('');
+}
+async function publishArticle(title){
+  const {error} = await client.from('articles').update({status:'publie', published_at: new Date().toISOString()}).ilike('title', title);
+  if(error){ alert('Erreur : '+error.message); } else { alert('✅ Article publié !'); location.reload(); }
 }
 async function logout(){ await client.auth.signOut(); window.location.href='login.html'; }
 document.getElementById('f').addEventListener('submit', async (e) => {
@@ -45,10 +63,11 @@ document.getElementById('f').addEventListener('submit', async (e) => {
   const title = document.getElementById('title').value;
   const excerpt = document.getElementById('excerpt').value;
   const content = document.getElementById('content').value;
+  const category_id = document.getElementById('category').value || null;
   const slug = title.toLowerCase().replace(/[^a-z0-9à-ÿ]+/gi,'-').replace(/^-|-$/g,'') + '-' + Date.now().toString().slice(-5);
   const msg = document.getElementById('msg'); msg.style.display='block';
-  const {error} = await client.from('articles').insert({title, slug, excerpt, content, author_id: user.id, status:'brouillon'});
-  if(error){ msg.textContent = 'Erreur : ' + error.message; } else { msg.textContent = '✅ Article créé en BROUILLON.'; document.getElementById('f').reset(); loadArticles(user.id); }
+  const {error} = await client.from('articles').insert({title, slug, excerpt, content, author_id: user.id, category_id, status:'brouillon'});
+  if(error){ msg.textContent = 'Erreur : ' + error.message; } else { msg.textContent = '✅ Article créé en BROUILLON. Cliquez sur Publier dans Mes articles pour le mettre en ligne.'; document.getElementById('f').reset(); loadArticles(user.id); }
 });
 check();
 </script>
