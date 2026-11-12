@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Connexion - ENECRDC.INFO</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>body{font-family:Arial,sans-serif;background:#F4F5F7;margin:0;padding:16px}.box{max-width:420px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden}.header{background:#0A1F3D;color:#fff;padding:20px;text-align:center}.header span{color:#C9A227}form{padding:20px;display:flex;flex-direction:column;gap:12px}input{padding:12px;border-radius:8px;border:1px solid #ddd}button{background:#0A1F3D;color:#fff;padding:12px;border-radius:8px;font-weight:700;border:none}#msg{font-size:13px;background:#F4F5F7;padding:10px;border-radius:8px;display:none}a{color:#0A1F3D;font-size:13px;text-align:center;display:block;margin-top:10px}</style>
+</head><body><div class="box"><div class="header"><h1>ENEC<span>RDC</span>.INFO</h1><p>Espace Rédaction - Connexion</p></div>
+<form id="f"><label>Email</label><input type="email" id="email" required><label>Mot de passe</label><input type="password" id="password" required><button type="submit" id="btn">Se connecter</button><p id="msg"></p></form><a href="/">← Retour à l'accueil</a></div>
+<script>
+const SUPABASE_URL = "https://vxcqmskiaxttipmiccku.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const form=document.getElementById('f'),msg=document.getElementById('msg'),btn=document.getElementById('btn');
+form.addEventListener('submit', async(e)=>{e.preventDefault();btn.textContent='Connexion...';msg.style.display='block';msg.textContent='';
+const email=document.getElementById('email').value,password=document.getElementById('password').value;
+const {data,error}=await client.auth.signInWithPassword({email,password});
+if(error){msg.textContent='Erreur : '+error.message;btn.textContent='Se connecter';return;}
+const {data:profile}=await client.from('profiles').select('full_name,role,is_active').eq('id',data.user.id).single();
+if(!profile||!profile.is_active){msg.textContent='Compte désactivé.';btn.textContent='Se connecter';return;}
+msg.textContent='Bienvenue '+profile.full_name+' - Rôle : '+profile.role+'. Connexion réussie.';btn.textContent='Connecté ✅';});
+</script></body></html>
