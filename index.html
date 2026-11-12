@@ -8,7 +8,7 @@
 <style>
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#F4F5F7;color:#111}
 header{background:#0A1F3D;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
-header strong{font-size:22px;letter-spacing:.2px}header strong span{color:#C9A227}
+header strong{font-size:22px}header strong span{color:#C9A227}
 header small{font-size:13px;opacity:.9}
 .flash{background:#D32F2F;color:#fff;padding:11px 16px;font-weight:700;font-size:15px}
 .catbar{background:#fff;padding:12px 16px;display:flex;gap:10px;overflow-x:auto;white-space:nowrap;border-bottom:3px solid #C9A227}
@@ -20,6 +20,7 @@ header small{font-size:13px;opacity:.9}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin:4px 0 12px}
 .topbar a{background:#C9A227;color:#0A1F3D;padding:8px 12px;border-radius:20px;font-weight:700;font-size:13px;text-decoration:none}
 .card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card img.cover{width:100%;height:220px;object-fit:cover;display:block}
 .card-body{padding:16px}.badge{background:#C9A227;color:#0A1F3D;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
 .card h2{margin:10px 0 6px;font-size:20px}.card p{color:#444;line-height:1.6}
 .card small{color:#888}.empty{background:#fff;padding:20px;border-radius:12px;text-align:center;color:#555}
@@ -30,7 +31,7 @@ footer a{color:#C9A227;text-decoration:none}
 <body>
 <header><strong>ENEC<span>RDC</span>.INFO</strong><small>Bukavu • RDC</small></header>
 <div class="flash">FLASH • Info en continu — RDC • Sud-Kivu • Bukavu</div>
-<div class="catbar" id="cats">
+<div class="catbar">
 <button class="active" onclick="filterCat('all',this)">À la une</button>
 <button onclick="filterCat('actualites-locales',this)">Politique</button>
 <button onclick="filterCat('economie',this)">Économie</button>
@@ -52,7 +53,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allArticles = [];
 async function load(){
-  const {data, error} = await client.from('articles').select('title,excerpt,content,status,created_at,category:categories(name,slug)').eq('status','publie').order('created_at',{ascending:false}).limit(20);
+  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,status,created_at,category:categories(name,slug)').eq('status','publie').order('created_at',{ascending:false}).limit(20);
   const el = document.getElementById('list');
   if(error){ el.innerHTML = '<div class="empty">Impossible de charger les articles : '+error.message+'</div>'; return; }
   if(!data || !data.length){ el.innerHTML = '<div class="empty">Aucun article publié pour le moment. Revenez bientôt.</div>'; return; }
@@ -66,7 +67,7 @@ function render(cat){
   let list = allArticles;
   if(cat !== 'all'){ list = allArticles.filter(a => getSlug(a).includes(cat) || getName(a).toLowerCase().includes(cat)); }
   if(!list.length){ el.innerHTML = '<div class="empty">Aucun article dans cette catégorie.</div>'; return; }
-  el.innerHTML = list.map((a,i) => '<div class="card"><div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p id="prev-'+i+'">'+a.content.substring(0,400)+'...</p><p id="full-'+i+'" style="display:none;">'+a.content+'</p><button onclick="document.getElementById(\'prev-'+i+'\').style.display=\'none\';document.getElementById(\'full-'+i+'\').style.display=\'block\';this.style.display=\'none\';" style="background:#0A1F3D;color:#fff;padding:8px 12px;border-radius:20px;border:none;">Lire la suite →</button><br><br><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
+  el.innerHTML = list.map((a,i) => '<div class="card">' + (a.cover_image_url ? '<img class="cover" src="'+a.cover_image_url+'" alt="'+a.title+'">' : '') + '<div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p id="prev-'+i+'">'+a.content.substring(0,400)+'...</p><p id="full-'+i+'" style="display:none;">'+a.content+'</p><button onclick="document.getElementById(\'prev-'+i+'\').style.display=\'none\';document.getElementById(\'full-'+i+'\').style.display=\'block\';this.style.display=\'none\';" style="background:#0A1F3D;color:#fff;padding:8px 12px;border-radius:20px;border:none;">Lire la suite →</button><br><br><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
 }
 function filterCat(cat, btn){ document.querySelectorAll('.catbar button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(cat); }
 load();
