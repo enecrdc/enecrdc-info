@@ -3,39 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ENECRDC.INFO - L'actualité du Sud-Kivu autrement</title>
+<title>ENECRDC.INFO - Info RDC, Bukavu et Sud-Kivu</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#F4F5F7;color:#111}
-header{background:#0A1F3D;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-header strong{font-size:20px}header strong span{color:#C9A227}
-header a{color:#fff;text-decoration:none;background:#C9A227;color:#0A1F3D;padding:8px 12px;border-radius:20px;font-weight:700;font-size:13px}
-.hero{background:#0A1F3D;color:#fff;padding:28px 16px;text-align:center}
-.hero h1{font-size:28px;margin:0 0 8px}.hero h1 span{color:#C9A227}.hero p{opacity:.9;margin:0}
+header{background:#0A1F3D;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+header strong{font-size:22px;letter-spacing:.2px}header strong span{color:#C9A227}
+header small{font-size:13px;opacity:.9}
+.flash{background:#D32F2F;color:#fff;padding:11px 16px;font-weight:700;font-size:15px}
+.catbar{background:#fff;padding:12px 16px;display:flex;gap:10px;overflow-x:auto;white-space:nowrap;border-bottom:3px solid #C9A227}
+.catbar button{padding:10px 18px;border-radius:999px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:#F1F3F5;color:#0A1F3D}
+.catbar button.active{background:#0A1F3D;color:#fff}
+.hero{background:#0A1F3D;color:#fff;padding:28px 16px 24px}
+.hero h1{font-size:32px;line-height:1.2;margin:0 0 12px}.hero p{color:#CBD5E1;font-size:16px;line-height:1.6;margin:0}
 .wrap{max-width:900px;margin:0 auto;padding:16px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin:4px 0 12px}
+.topbar a{background:#C9A227;color:#0A1F3D;padding:8px 12px;border-radius:20px;font-weight:700;font-size:13px;text-decoration:none}
 .card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .card-body{padding:16px}.badge{background:#C9A227;color:#0A1F3D;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
 .card h2{margin:10px 0 6px;font-size:20px}.card p{color:#444;line-height:1.6}
 .card small{color:#888}.empty{background:#fff;padding:20px;border-radius:12px;text-align:center;color:#555}
 footer{background:#0A1F3D;color:#fff;padding:24px 16px;text-align:center;margin-top:20px}
 footer a{color:#C9A227;text-decoration:none}
-.cat{margin:12px 0;display:flex;gap:8px;flex-wrap:wrap}
-.cat button{padding:8px 12px;border-radius:20px;border:1px solid #ddd;background:#fff;cursor:pointer}
-.cat button.active{background:#0A1F3D;color:#fff}
 </style>
 </head>
 <body>
-<header><strong>ENEC<span>RDC</span>.INFO</strong><a href="login.html">Espace Rédaction</a></header>
-<div class="hero"><h1>L'actualité du Sud-Kivu <span>autrement</span></h1><p>Bukavu • Sud-Kivu • RDC — Des articles vérifiés, de proximité.</p></div>
-<div class="wrap">
-<div class="cat">
-<button class="active" onclick="filterCat('all',this)">Tous</button>
-<button onclick="filterCat('a-la-une',this)">À la une</button>
-<button onclick="filterCat('actualites-locales',this)">Actualités locales</button>
-<button onclick="filterCat('politique',this)">Politique</button>
+<header><strong>ENEC<span>RDC</span>.INFO</strong><small>Bukavu • RDC</small></header>
+<div class="flash">FLASH • Info en continu — RDC • Sud-Kivu • Bukavu</div>
+<div class="catbar" id="cats">
+<button class="active" onclick="filterCat('all',this)">À la une</button>
+<button onclick="filterCat('actualites-locales',this)">Politique</button>
+<button onclick="filterCat('economie',this)">Économie</button>
+<button onclick="filterCat('paix',this)">Sécurité</button>
+<button onclick="filterCat('sante',this)">Société</button>
 <button onclick="filterCat('sport',this)">Sport</button>
 <button onclick="filterCat('culture',this)">Culture</button>
 </div>
+<div class="hero"><h1>Info RDC, Bukavu et Sud-Kivu — Vérifiée, de terrain.</h1><p>Actualité générale et développement. 19 rubriques. 26 provinces. Version française, anglais et kiswahili à venir.</p></div>
+<div class="wrap">
+<div class="topbar"><strong>Derniers articles</strong><a href="login.html">Espace Rédaction</a></div>
 <div id="list"><div class="empty">Chargement des articles...</div></div>
 <div class="card"><div class="card-body"><h2>À propos d'ENECRDC.INFO</h2><p>ENECRDC.INFO est un média d'information au service de Bukavu, du Sud-Kivu et de toute la RDC. Notre rédaction travaille chaque jour pour vous apporter une information vérifiée et de proximité.</p><p><strong>Contact :</strong> redaction@enecrdc.info • Bukavu, Sud-Kivu, RDC</p></div></div>
 </div>
@@ -62,7 +68,7 @@ function render(cat){
   if(!list.length){ el.innerHTML = '<div class="empty">Aucun article dans cette catégorie.</div>'; return; }
   el.innerHTML = list.map((a,i) => '<div class="card"><div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p id="prev-'+i+'">'+a.content.substring(0,400)+'...</p><p id="full-'+i+'" style="display:none;">'+a.content+'</p><button onclick="document.getElementById(\'prev-'+i+'\').style.display=\'none\';document.getElementById(\'full-'+i+'\').style.display=\'block\';this.style.display=\'none\';" style="background:#0A1F3D;color:#fff;padding:8px 12px;border-radius:20px;border:none;">Lire la suite →</button><br><br><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
 }
-function filterCat(cat, btn){ document.querySelectorAll('.cat button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(cat); }
+function filterCat(cat, btn){ document.querySelectorAll('.catbar button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(cat); }
 load();
 </script>
 </body>
