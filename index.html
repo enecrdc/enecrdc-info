@@ -63,7 +63,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allArticles = [];
 async function load(){
-  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,status,created_at,category:categories(name,slug)').eq('status','publie').order('created_at',{ascending:false}).limit(20);
+  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,status,created_at,category:categories(name,slug)').eq('status','publie').order('created_at',{ascending:false}).limit(50);
   const el = document.getElementById('list');
   if(error){ el.innerHTML = '<div class="empty">Impossible de charger les articles : '+error.message+'</div>'; return; }
   if(!data || !data.length){ el.innerHTML = '<div class="empty">Aucun article publié pour le moment. Revenez bientôt.</div>'; return; }
