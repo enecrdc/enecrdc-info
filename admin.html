@@ -3,32 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin TEST - ENECRDC.INFO</title>
+<title>Admin - ENECRDC.INFO</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>body{font-family:Arial;padding:16px;background:#F4F5F7}button{background:#0A1F3D;color:#fff;padding:10px 14px;border-radius:8px;border:none;font-weight:700}.box{background:#fff;padding:16px;border-radius:12px;margin-top:12px}</style>
+<style>
+body{font-family:Arial,sans-serif;background:#F4F5F7;margin:0;padding:16px}
+.top{background:#0A1F3D;color:#fff;padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
+.top span{color:#C9A227}
+.box{background:#fff;padding:16px;border-radius:12px;margin-top:12px}
+input,textarea,select{width:100%;padding:12px;border-radius:8px;border:1px solid #ddd;margin:8px 0;box-sizing:border-box}
+button{background:#0A1F3D;color:#fff;padding:10px 12px;border-radius:8px;font-weight:700;border:none;cursor:pointer}
+.btn-small{padding:6px 10px;font-size:12px;margin:4px 4px 0 0}
+.btn-gold{background:#C9A227;color:#0A1F3D}.btn-green{background:#25D366;color:#fff}.btn-orange{background:#FF9800;color:#fff}.btn-red{background:#D32F2F;color:#fff}
+#msg{font-size:13px;background:#F4F5F7;padding:10px;border-radius:8px;display:none}
+label{font-size:13px;font-weight:700}
+img.preview{width:100%;border-radius:8px;margin-top:8px;display:none}
+.article{border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:12px}
+.link{font-size:12px;word-break:break-all;background:#F4F5F7;padding:8px;border-radius:8px;margin-top:8px}
+</style>
 </head>
 <body>
-<h2>TEST ADMIN</h2>
-<div class="box"><p id="status">Test de connexion...</p><button onclick="localStorage.clear();sessionStorage.clear();location.href='login.html?v=99'">Se reconnecter</button></div>
-<div class="box"><h3>Mes articles (sans catégorie)</h3><div id="list">Chargement...</div></div>
+<div class="top"><div><strong>ENEC<span>RDC</span>.INFO</strong> - Espace Admin</div><button onclick="forceLogout()" style="background:#C9A227;color:#0A1F3D;">Déconnexion</button></div>
+<div class="box"><h2 id="welcome">Chargement...</h2><p id="role"></p></div>
+<div class="box"><h3 id="formTitle">Nouvel article</h3><form id="f">
+<label>Titre</label><input id="title" required placeholder="Titre de l'article">
+<label>Catégorie</label><select id="category"><option value="">Chargement des catégories...</option></select>
+<label>Photo de couverture (laissez vide pour garder l'ancienne)</label><input type="file" id="photo" accept="image/*"><img id="preview" class="preview">
+<label>Résumé</label><textarea id="excerpt" rows="2" placeholder="Résumé en 2-3 lignes"></textarea>
+<label>Contenu</label><textarea id="content" rows="6" required placeholder="Votre article complet ici..."></textarea>
+<button type="submit" id="btn">Enregistrer en brouillon</button><button type="button" id="cancelEdit" onclick="cancelEdit()" style="display:none;background:#888;">Annuler la modification</button><p id="msg"></p></form></div>
+<div class="box"><h3>Mes articles — Modifier / Publier / Supprimer / Partager</h3><div id="list">Chargement...</div></div>
 <script>
 const SUPABASE_URL = "https://vxcqmskiaxttipmiccku.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo";
+const SITE = "https://enecrdc.github.io/enecrdc-info";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-async function test(){
-  const s = document.getElementById('status');
+let editingSlug = null;
+let categoriesMap = {};
+function forceLogout(){ try{localStorage.clear();sessionStorage.clear();}catch(e){} client.auth.signOut().finally(()=>{window.location.href='login.html?v=99';}); }
+document.getElementById('photo').addEventListener('change', (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  const img = document.getElementById('preview'); img.src = URL.createObjectURL(f); img.style.display = 'block';
+});
+async function loadCategories(){
   try{
-    const {data:{user}, error:uErr} = await client.auth.getUser();
-    if(uErr){ s.textContent = 'Erreur auth : ' + uErr.message; return; }
-    if(!user){ s.textContent = 'Pas connecté. Allez sur login.html'; location.href='login.html?v=99'; return; }
-    s.textContent = 'Connecté : ' + user.email;
-    const {data, error} = await client.from('articles').select('title,slug,status,created_at').eq('author_id', user.id).order('created_at',{ascending:false}).limit(20);
-    if(error){ document.getElementById('list').textContent = 'Erreur articles : ' + error.message; return; }
-    if(!data.length){ document.getElementById('list').textContent = 'Aucun article trouvé.'; return; }
-    document.getElementById('list').innerHTML = data.map(a=>'<p>• '+a.title+' — '+a.status+'</p>').join('');
-  }catch(e){ document.getElementById('status').textContent = 'Erreur : ' + e.message; }
+    const {data} = await client.from('categories').select('id,name,slug').order('name');
+    const sel = document.getElementById('category');
+    if(!data || !data.length){ sel.innerHTML = '<option value="">Aucune catégorie</option>'; return; }
+    data.forEach(c=>{ categoriesMap[c.id]=c.name; });
+    sel.innerHTML = data.map(c => '<option value="'+c.id+'">'+c.name+'</option>').join('');
+  }catch(e){ document.getElementById('category').innerHTML = '<option value="">Catégories indisponibles</option>'; }
 }
-test();
+async function check(){
+  const {data:{user}} = await client.auth.getUser();
+  if(!user){ window.location.href='login.html?v=99'; return; }
+  document.getElementById('welcome').textContent = 'Bienvenue ' + user.email;
+  document.getElementById('role').textContent = 'Rôle : Rédaction';
+  await loadCategories();
+  loadArticles(user.id);
+}
+function getLink(slug){ return SITE + '/article.html?slug=' + slug + '&v=99'; }
+function copyLink(slug){ navigator.clipboard.writeText(getLink(slug)).then(()=>{ alert('✅ Lien copié !\n\n' + getLink(slug)); }); }
+async function editArticle(slug){
+  const {data} = await client.from('articles').select('*').eq('slug', slug).single();
+  if(!data){ alert('Article introuvable'); return; }
+  editingSlug = slug;
+  document.getElementById('title').value = data.title || '';
+  document.getElementById('excerpt').value = data.excerpt || '';
+  document.getElementById('content').value = data.content || '';
+  if(data.category_id) document.getElementById('category').value = data.category_id;
+  if(data.cover_image_url){ const img = document.getElementById('preview'); img.src = data.cover_image_url; img.style.display = 'block'; }
+  document.getElementById('formTitle').textContent = 'Modifier l\'article : ' + (data.title || 'Sans titre');
+  document.getElementById('btn').textContent = 'Mettre à jour l\'article';
+  document.getElementById('cancelEdit').style.display = 'inline-block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function cancelEdit(){
+  editingSlug = null;
+  document.getElementById('f').reset();
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('formTitle').textContent = 'Nouvel article';
+  document.getElementById('btn').textContent = 'Enregistrer en brouillon';
+  document.getElementById('cancelEdit').style.display = 'none';
+}
+async function loadArticles(uid){
+  const {data, error} = await client.from('articles').select('title,slug,status,created_at,cover_image_url,category_id').eq('author_id',uid).order('created_at',{ascending:false}).limit(20);
+  const el = document.getElementById('list');
+  if(error){ el.innerHTML = 'Erreur : ' + error.message + '<br><br><button onclick="location.reload()">Réessayer</button>'; return; }
+  if(!data || !data.length){ el.innerHTML = 'Aucun article pour le moment.'; return; }
+  el.innerHTML = data.map(a => {
+    const link = getLink(a.slug);
+    const wa = 'https://wa.me/?text=' + encodeURIComponent((a.title||'Article') + ' - ENECRDC.INFO ' + link);
+    const catName = categoriesMap[a.category_id] || 'Sans catégorie';
+    return '<div class="article"><strong>' + (a.title || '(Sans titre - brouillon vide)') + '</strong><br><small>' + catName + ' - ' + a.status + ' ' + (a.cover_image_url ? '📷' : '') + ' - ' + new Date(a.created_at).toLocaleDateString('fr-FR') + '</small><div class="link">' + link + '</div><button class="btn-small btn-orange" onclick="editArticle(\''+a.slug+'\')">✏️ Modifier</button><button class="btn-small btn-gold" onclick="copyLink(\''+a.slug+'\')">📋 Copier le lien</button><button class="btn-small" onclick="window.open(\''+link+'\',\'_blank\')">👁️ Voir</button><a href="'+wa+'" target="_blank"><button class="btn-small btn-green" type="button">WhatsApp</button></a>' + (a.status !== 'publie' ? '<button class="btn-small" onclick="publishArticle(\''+a.slug+'\')">Publier</button>' : '') + '<button class="btn-small btn-red" onclick="deleteArticle(\''+a.slug+'\',\''+(a.title||'').replace(/\'/g,"")+'\')">🗑️ Supprimer</button></div>';
+  }).join('');
+}
+async function publishArticle(slug){
+  const {error} = await client.from('articles').update({status:'publie', published_at: new Date().toISOString()}).eq('slug', slug);
+  if(error){ alert('Erreur : '+error.message); } else { alert('✅ Article publié !'); location.reload(); }
+}
+async function deleteArticle(slug, title){
+  if(!confirm('Vraiment supprimer cet article ?\n\n' + title + '\n\nCette action est définitive.')){ return; }
+  const {error} = await client.from('articles').delete().eq('slug', slug);
+  if(error){ alert('Erreur : ' + error.message); } else { alert('✅ Article supprimé !'); location.reload(); }
+}
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const {data:{user}} = await client.auth.getUser(); if(!user) return;
+  const msg = document.getElementById('msg'); msg.style.display='block'; msg.textContent = 'Enregistrement...';
+  const title = document.getElementById('title').value;
+  const excerpt = document.getElementById('excerpt').value;
+  const content = document.getElementById('content').value;
+  const category_id = document.getElementById('category').value || null;
+  let cover_image_url = null;
+  const file = document.getElementById('photo').files[0];
+  if(file){
+    const fileName = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const {error: upErr} = await client.storage.from('media').upload(fileName, file);
+    if(!upErr){ const {data: pub} = client.storage.from('media').getPublicUrl(fileName); cover_image_url = pub.publicUrl; }
+  }
+  if(editingSlug){
+    const update = {title, excerpt, content, category_id};
+    if(cover_image_url) update.cover_image_url = cover_image_url;
+    const {error} = await client.from('articles').update(update).eq('slug', editingSlug);
+    if(error){ msg.textContent = 'Erreur : ' + error.message; } else { msg.textContent = '✅ Article mis à jour !'; cancelEdit(); loadArticles(user.id); }
+  } else {
+    const slug = title.toLowerCase().replace(/[^a-z0-9à-ÿ]+/gi,'-').replace(/^-|-$/g,'') + '-' + Date.now().toString().slice(-5);
+    const {error} = await client.from('articles').insert({title, slug, excerpt, content, author_id: user.id, category_id, cover_image_url, status:'brouillon'});
+    if(error){ msg.textContent = 'Erreur : ' + error.message; } else { msg.textContent = '✅ Article créé en BROUILLON.'; document.getElementById('f').reset(); document.getElementById('preview').style.display='none'; loadArticles(user.id); }
+  }
+});
+check();
 </script>
 </body>
 </html>
