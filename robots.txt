@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://enecrdc.github.io/enecrdc-info/sitemap.xml
