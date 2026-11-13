@@ -42,15 +42,17 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const params = new URLSearchParams(window.location.search);
 const slug = params.get('slug');
 async function load(){
-  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,created_at,category:categories(name)').eq('slug', slug).eq('status','publie').single();
   const el = document.getElementById('content');
-  if(error || !data){ el.innerHTML = '<div class="card"><div class="card-body"><h2>Article introuvable</h2><p>Il a peut-être été supprimé ou n’est pas encore publié.</p><a class="btn-home" href="index.html" style="display:inline-block;padding:10px 14px;border-radius:999px;text-decoration:none;">← Retour à l’accueil</a></div></div>'; return; }
+  if(!slug){ el.innerHTML = '<div class="card"><div class="card-body"><h2>Lien incomplet</h2><p>Ce lien n’a pas de slug. Ouvrez l’article depuis admin.html → Voir.</p><p>Slug reçu : (vide)</p><a href="index.html">← Retour à l’accueil</a></div></div>'; return; }
+  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,created_at,category:categories(name)').eq('slug', slug).eq('status','publie').single();
+  if(error || !data){ 
+    el.innerHTML = '<div class="card"><div class="card-body"><h2>Article introuvable</h2><p>Slug demandé : <b>'+slug+'</b></p><p>Erreur Supabase : <b>'+(error ? error.message : 'aucune donnée')+'</b></p><p>Code : '+(error ? error.code : '-')+'</p><p>Vérifiez : 1) L’article est bien en Publie dans admin.html 2) Le slug dans Supabase est exactement le même</p><a href="index.html">← Retour à l’accueil</a></div></div>'; 
+    return; 
+  }
   document.title = data.title + ' - ENECRDC.INFO';
   const link = SITE + '/article.html?slug=' + slug;
   const wa = 'https://wa.me/?text=' + encodeURIComponent(data.title + ' - ENECRDC.INFO ' + link);
-  el.innerHTML = '<div class="card">' + (data.cover_image_url ? '<img class="cover" src="'+data.cover_image_url+'">' : '') + '<div class="card-body"><span class="badge">'+(data.category?data.category.name.toUpperCase():'À LA UNE')+'</span><h2>'+data.title+'</h2><small>Publié le '+new Date(data.created_at).toLocaleDateString('fr-FR')+' • ENECRDC.INFO - Bukavu, Sud-Kivu</small>'<p style="white-space:pre-line;">'+(data.content||'')+'</p>'<div class="share"><a class="btn-wa" href="'+wa+'" target="_blank">💬 Partager sur WhatsApp</a><button class="btn-copy" onclick="navigator.clipboard.writeText(\''+link+'\').then(()=>alert(\'Lien copié !\'))">📋 Copier le lien</button><a class="btn-home" href="index.html">← Tous les articles</a></div></div></div>';
+  el.innerHTML = '<div class="card">' + (data.cover_image_url ? '<img class="cover" src="'+data.cover_image_url+'">' : '') + '<div class="card-body"><span class="badge">'+(data.category?data.category.name.toUpperCase():'À LA UNE')+'</span><h2>'+data.title+'</h2><small>Publié le '+new Date(data.created_at).toLocaleDateString('fr-FR')+' • ENECRDC.INFO - Bukavu, Sud-Kivu</small><p>'+(data.content||'')+'</p><div class="share"><a class="btn-wa" href="'+wa+'" target="_blank">💬 Partager sur WhatsApp</a><button class="btn-copy" onclick="navigator.clipboard.writeText(\''+link+'\').then(()=>alert(\'Lien copié !\'))">📋 Copier le lien</button><a class="btn-home" href="index.html">← Tous les articles</a></div></div></div>';
 }
 load();
 </script>
-</body>
-</html>
