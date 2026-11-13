@@ -92,7 +92,7 @@ async function loadArticles(uid){
   if(!data || !data.length){ el.innerHTML = 'Aucun article pour le moment.'; return; }
   el.innerHTML = data.map(a => {
     const link = getLink(a.slug);
-    const wa = 'https://wa.me/?text=' + encodeURIComponent((a.title||'Article') + ' - ENECRDC.INFO ' + link);
+    const wa = 'https://wa.me/?text=' + encodeURIComponent('*' + a.title + '*\n\nInfo Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.\n\nLire ici : ' + link);
     const catName = categoriesMap[a.category_id] || 'Sans catégorie';
     return '<div class="article"><strong>' + (a.title || '(Sans titre - brouillon vide)') + '</strong><br><small>' + catName + ' - ' + a.status + ' ' + (a.cover_image_url ? '📷' : '') + ' - ' + new Date(a.created_at).toLocaleDateString('fr-FR') + '</small><div class="link">' + link + '</div><button class="btn-small btn-orange" onclick="editArticle(\''+a.slug+'\')">✏️ Modifier</button><button class="btn-small btn-gold" onclick="copyLink(\''+a.slug+'\')">📋 Copier le lien</button><button class="btn-small" onclick="window.open(\''+link+'\',\'_blank\')">👁️ Voir</button><a href="'+wa+'" target="_blank"><button class="btn-small btn-green" type="button">WhatsApp</button></a>' + (a.status !== 'publie' ? '<button class="btn-small" onclick="publishArticle(\''+a.slug+'\')">Publier</button>' : '') + '<button class="btn-small btn-red" onclick="deleteArticle(\''+a.slug+'\',\''+(a.title||'').replace(/\'/g,"")+'\')">🗑️ Supprimer</button></div>';
   }).join('');
