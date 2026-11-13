@@ -51,7 +51,7 @@ async function load(){
   }
   document.title = data.title + ' - ENECRDC.INFO';
   const link = SITE + '/article.html?slug=' + slug;
-  const wa = 'https://wa.me/?text=' + encodeURIComponent(data.title + ' - ENECRDC.INFO ' + link);
+  const wa = 'https://wa.me/?text=' + encodeURIComponent('*' + data.title + '*\n\nInfo Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.\n\nLire ici : ' + link);
   el.innerHTML = '<div class="card">' + (data.cover_image_url ? '<img class="cover" src="'+data.cover_image_url+'">' : '') + '<div class="card-body"><span class="badge">'+(data.category?data.category.name.toUpperCase():'À LA UNE')+'</span><h2>'+data.title+'</h2><small>Publié le '+new Date(data.created_at).toLocaleDateString('fr-FR')+' • ENECRDC.INFO - Bukavu, Sud-Kivu</small><p>'+(data.content||'')+'</p><div class="share"><a class="btn-wa" href="'+wa+'" target="_blank">💬 Partager sur WhatsApp</a><button class="btn-copy" onclick="navigator.clipboard.writeText(\''+link+'\').then(()=>alert(\'Lien copié !\'))">📋 Copier le lien</button><a class="btn-home" href="index.html">← Tous les articles</a></div></div></div>';
 }
 load();
