@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ENECRDC.INFO - Info RDC, Bukavu et Sud-Kivu</title>
+<title>ENECRDC.INFO - Info Kivu, RDC, Grands Lacs, Afrique et Monde</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<meta property="og:title" content="ENECRDC.INFO - Info RDC, Bukavu et Sud-Kivu">
-<meta property="og:description" content="L'actualité du Sud-Kivu autrement. Articles vérifiés, de terrain. Bukavu, Sud-Kivu, RDC.">
+<meta property="og:title" content="ENECRDC.INFO - Info Kivu, RDC, Grands Lacs, Afrique et Monde">
+<meta property="og:description" content="L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde. Vérifiée, de terrain.">
 <meta property="og:image" content="https://enecrdc.github.io/enecrdc-info/Logo.jpg">
 <style>
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;background:#F4F5F7;color:#111}
@@ -21,6 +21,7 @@ header small{font-size:13px;opacity:.9}
 .hero h1{font-size:32px;line-height:1.2;margin:0 0 12px}.hero p{color:#CBD5E1;font-size:16px;line-height:1.6;margin:0}
 .hero .date{color:#C9A227;font-weight:700;margin-top:12px}
 .hero .cta{display:inline-block;margin-top:12px;background:#C9A227;color:#0A1F3D;padding:10px 18px;border-radius:999px;font-weight:700;text-decoration:none}
+.hero .lang{font-size:13px;opacity:.8;margin-top:8px}
 .wrap{max-width:900px;margin:0 auto;padding:16px}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin:4px 0 12px}
 .topbar a{background:#C9A227;color:#0A1F3D;padding:8px 12px;border-radius:20px;font-weight:700;font-size:13px;text-decoration:none}
@@ -37,7 +38,7 @@ footer a{color:#C9A227;text-decoration:none}
 </head>
 <body>
 <header><strong>ENEC<span>RDC</span>.INFO</strong><small>Bukavu • RDC</small></header>
-<div class="flash">FLASH • Info en continu — RDC • Sud-Kivu • Bukavu</div>
+<div class="flash">FLASH • Info en continu — Kivu • RDC • Grands Lacs • Afrique • Monde</div>
 <div class="catbar">
 <button class="active" onclick="filterCat('all',this)">À la une</button>
 <button onclick="filterCat('actualites-locales',this)">Politique</button>
@@ -48,15 +49,16 @@ footer a{color:#C9A227;text-decoration:none}
 <button onclick="filterCat('culture',this)">Culture</button>
 </div>
 <div class="hero">
-<h1>Info RDC, Bukavu et Sud-Kivu — Vérifiée, de terrain.</h1>
-<p>Actualité générale et développement, depuis Bukavu. 19 rubriques pour le Sud-Kivu et toute la RDC. Version française disponible, anglais et kiswahili à venir.</p>
+<h1>Info Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.</h1>
+<p>L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde. Une information de proximité, nationale et internationale, au plus près des réalités.</p>
+<p class="lang">Version française disponible, anglais et kiswahili à venir.</p>
 <p class="date" id="date"></p>
 <a class="cta" href="#list">Lire les derniers articles ↓</a>
 </div>
 <div class="wrap">
 <div class="topbar"><strong>Derniers articles</strong><a href="login.html">Espace Rédaction</a></div>
 <div id="list"><div class="empty">Chargement des articles...</div></div>
-<div class="card"><div class="card-body"><h2>À propos d'ENECRDC.INFO</h2><p>ENECRDC.INFO est un média d'information au service de Bukavu, du Sud-Kivu et de toute la RDC. Notre rédaction travaille chaque jour pour vous apporter une information vérifiée et de proximité.</p><p><strong>📞 Téléphone / WhatsApp :</strong> +243 962 471 683<br><strong>✉️ Email :</strong> enecrdcinfo@gmail.com<br><strong>✉️ Rédaction :</strong> redaction@enecrdc.info<br><strong>📍 Adresse :</strong> Bukavu, Sud-Kivu, RDC</p><a class="contact-btn btn-call" href="tel:+243962471683">📞 Appeler</a><a class="contact-btn btn-wa" href="https://wa.me/243962471683?text=Bonjour%20ENECRDC.INFO%2C%20j%27ai%20une%20info%20%C3%A0%20partager">💬 WhatsApp</a><a class="contact-btn btn-mail" href="mailto:enecrdcinfo@gmail.com">✉️ Écrire un mail</a></div></div>
+<div class="card"><div class="card-body"><h2>À propos d'ENECRDC.INFO</h2><p>ENECRDC.INFO est un média d'information au service du Kivu, de la RDC, des Grands Lacs, de l'Afrique et du Monde. Notre rédaction travaille chaque jour pour vous apporter une information vérifiée et de proximité, au plus près des réalités.</p><p><strong>📞 Téléphone / WhatsApp :</strong> +243 962 471 683<br><strong>✉️ Email :</strong> enecrdcinfo@gmail.com<br><strong>✉️ Rédaction :</strong> redaction@enecrdc.info<br><strong>📍 Adresse :</strong> Bukavu, Sud-Kivu, RDC</p><a class="contact-btn btn-call" href="tel:+243962471683">📞 Appeler</a><a class="contact-btn btn-wa" href="https://wa.me/243962471683?text=Bonjour%20ENECRDC.INFO%2C%20j%27ai%20une%20info%20%C3%A0%20partager">💬 WhatsApp</a><a class="contact-btn btn-mail" href="mailto:enecrdcinfo@gmail.com">✉️ Écrire un mail</a></div></div>
 </div>
 <footer><strong>ENEC<span style="color:#C9A227">RDC</span>.INFO</strong><br><br>📞 +243 962 471 683 • ✉️ enecrdcinfo@gmail.com • redaction@enecrdc.info<br><br><a href="index.html">Accueil</a> • <a href="login.html">Espace Rédaction</a><br><br><small>© 2026 ENECRDC.INFO - Tous droits réservés.</small></footer>
 <script>
