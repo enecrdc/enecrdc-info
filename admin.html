@@ -44,10 +44,9 @@ textarea{min-height:220px;line-height:1.7;white-space:pre-line}
 <input type="text" id="title" placeholder="Ex : Bukavu, protégeons notre environnement : bien gérer nos déchets, c'est protéger notre vie">
 <label>Catégorie *</label>
 <select id="category"><option value="">Chargement des catégories...</option></select>
-<div class="help">Si la liste reste sur « Chargement... », attendez 5 secondes puis rechargez la page avec ?v=nouveau numéro.</div>
 <label>Photo de l'article</label>
 <input type="file" id="photo" accept="image/jpeg,image/png,image/webp">
-<div class="help">✅ JPG, PNG et <b>WebP</b> acceptés. Pour WebP : qualité 80%, largeur max 1200px. Ne changez pas Logo.jpg, il doit rester en JPG pour WhatsApp.</div>
+<div class="help">✅ <b>Conversion automatique WebP activée.</b> Choisissez une photo JPG ou PNG normalement, elle sera convertie toute seule en WebP qualité 80% avant l'envoi. Plus légère, même qualité. Logo.jpg reste en JPG pour WhatsApp.</div>
 <div class="preview" id="photoPreview"></div>
 <div id="currentPhoto" class="help"></div>
 <label>Résumé (2-3 lignes, pour l'accueil)</label>
@@ -80,10 +79,7 @@ let categoriesList = [];
 
 async function checkAuth(){
   const {data} = await client.auth.getSession();
-  if(!data.session){
-    window.location.href = "login.html?v=99";
-    return false;
-  }
+  if(!data.session){ window.location.href = "login.html?v=99"; return false; }
   currentUser = data.session.user;
   document.getElementById('status').innerHTML = "Connecté : <b>"+currentUser.email+"</b> • <span style='color:#2E7D32;'>Prêt à publier</span>";
   return true;
@@ -94,14 +90,9 @@ async function loadCategories(){
     const {data, error} = await client.from('categories').select('id,name,slug').order('name');
     if(error) throw error;
     categoriesList = data || [];
-    if(!categoriesList.length){
-      el.innerHTML = '<option value="">Aucune catégorie - créez-en dans Supabase</option>';
-      return;
-    }
+    if(!categoriesList.length){ el.innerHTML = '<option value="">Aucune catégorie - créez-en dans Supabase</option>'; return; }
     el.innerHTML = '<option value="">-- Choisir une catégorie --</option>' + categoriesList.map(c=>'<option value="'+c.id+'">'+c.name+'</option>').join('');
-  }catch(e){
-    el.innerHTML = '<option value="">Impossible de charger les catégories : '+e.message+'</option>';
-  }
+  }catch(e){ el.innerHTML = '<option value="">Impossible de charger les catégories : '+e.message+'</option>'; }
 }
 async function loadArticles(){
   const el = document.getElementById('list');
@@ -124,18 +115,52 @@ async function loadArticles(){
       + '<a class="btn btn-wa" href="'+wa+'" target="_blank" style="display:inline-block;text-decoration:none;padding:12px 18px;">💬 WhatsApp</a>'
       + '<button class="btn btn-del" onclick="deleteArticle(\''+a.id+'\')">🗑️ Supprimer</button></div></div>';
     }).join('');
-  }catch(e){
-    el.innerHTML = '<div class="empty"><b>Impossible de charger les articles :</b><br>'+e.message+'<br><br>Rechargez la page avec ?v=nouveau numéro.</div>';
-  }
+  }catch(e){ el.innerHTML = '<div class="empty"><b>Impossible de charger les articles :</b><br>'+e.message+'</div>'; }
 }
 function slugify(t){
   return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,70);
 }
+
+// ===== CONVERSION AUTOMATIQUE JPG/PNG -> WebP =====
+async function convertToWebP(file){
+  // Si déjà WebP, on ne convertit pas
+  if(file.type === 'image/webp') return file;
+  // Si ce n'est pas une image, on renvoie tel quel
+  if(!file.type.startsWith('image/')) return file;
+  try{
+    const bitmap = await createImageBitmap(file);
+    // On limite à 1200px de large pour ne pas avoir de fichier trop lourd
+    let w = bitmap.width, h = bitmap.height;
+    const MAX = 1200;
+    if(w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob = await new Promise((resolve)=>{
+      canvas.toBlob((b)=>resolve(b), 'image/webp', 0.80);
+    });
+    if(!blob) return file;
+    const newName = file.name.replace(/\.[^.]+$/, '') + '.webp';
+    const webpFile = new File([blob], newName, {type:'image/webp'});
+    // On montre le gain dans l'aperçu
+    const gain = Math.round((1 - blob.size / file.size) * 100);
+    const preview = document.getElementById('photoPreview');
+    if(preview){
+      preview.innerHTML += '<p style="color:#2E7D32;font-weight:700;">✅ Converti automatiquement en WebP : '+Math.round(file.size/1024)+' Ko → '+Math.round(blob.size/1024)+' Ko ( -'+gain+'% )</p>';
+    }
+    return webpFile;
+  }catch(e){
+    console.log('Conversion WebP échouée, on envoie l’original :', e);
+    return file;
+  }
+}
+
 document.getElementById('photo').addEventListener('change', function(e){
   const f = e.target.files[0];
   if(!f) return;
   const reader = new FileReader();
-  reader.onload = function(ev){ document.getElementById('photoPreview').innerHTML = '<p><b>Aperçu :</b> '+f.name+' ('+Math.round(f.size/1024)+' Ko) - '+(f.type||'image')+'</p><img src="'+ev.target.result+'">'; };
+  reader.onload = function(ev){ document.getElementById('photoPreview').innerHTML = '<p><b>Choisi :</b> '+f.name+' ('+Math.round(f.size/1024)+' Ko) - '+(f.type||'image')+'</p><img src="'+ev.target.result+'"><p style="color:#666;">La conversion en WebP se fera automatiquement au moment de l’enregistrement.</p>'; };
   reader.readAsDataURL(f);
 });
 async function uploadPhoto(file){
@@ -154,20 +179,23 @@ async function saveArticle(isUpdate){
   const msg = document.getElementById('saveMsg');
   if(!title || !content){ alert('Titre et contenu obligatoires.'); return; }
   if(!category_id){ alert('Choisissez une catégorie.'); return; }
-  msg.textContent = 'Enregistrement...';
+  msg.textContent = 'Conversion WebP + Enregistrement... Patientez 2-3 secondes.';
   try{
     let photoUrl = editingOldPhoto;
     const file = document.getElementById('photo').files[0];
-    if(file){ photoUrl = await uploadPhoto(file); }
+    if(file){
+      const webpFile = await convertToWebP(file);
+      photoUrl = await uploadPhoto(webpFile);
+    }
     if(editingId){
       const {error} = await client.from('articles').update({title:title, excerpt:excerpt, content:content, cover_image_url:photoUrl, category_id:category_id}).eq('id', editingId);
       if(error) throw error;
-      msg.textContent = 'Article mis à jour ! ✅';
+      msg.textContent = 'Article mis à jour ! ✅ Photo en WebP.';
     }else{
       let slug = slugify(title) + '-' + Date.now().toString().slice(-5);
       const {error} = await client.from('articles').insert({title:title, slug:slug, excerpt:excerpt, content:content, cover_image_url:photoUrl, category_id:category_id, author_id:currentUser.id, status:'brouillon'});
       if(error) throw error;
-      msg.textContent = 'Brouillon enregistré ! Cliquez sur Publier dans Mes articles. ✅';
+      msg.textContent = 'Brouillon enregistré ! ✅ Photo convertie en WebP. Cliquez sur Publier.';
     }
     resetForm(false);
     loadArticles();
@@ -185,7 +213,7 @@ async function editArticle(id){
   document.getElementById('formTitle').textContent = 'Modifier l’article : ' + data.title;
   document.getElementById('updateBtn').style.display = 'inline-block';
   document.getElementById('cancelBtn').style.display = 'inline-block';
-  document.getElementById('currentPhoto').textContent = data.cover_image_url ? 'Photo actuelle conservée. Choisissez une nouvelle photo seulement si vous voulez la changer (JPG, PNG ou WebP).' : 'Aucune photo actuelle.';
+  document.getElementById('currentPhoto').textContent = data.cover_image_url ? 'Photo actuelle conservée. Choisissez une nouvelle photo seulement si vous voulez la changer (elle sera convertie en WebP automatiquement).' : 'Aucune photo actuelle.';
   document.getElementById('photoPreview').innerHTML = data.cover_image_url ? '<img src="'+data.cover_image_url+'" style="max-height:140px;">' : '';
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -216,20 +244,9 @@ async function deleteArticle(id){
   alert('Article supprimé !');
   loadArticles();
 }
-function copyLink(link){
-  navigator.clipboard.writeText(link).then(()=>alert('Lien copié !\n'+link));
-}
-async function logout(){
-  await client.auth.signOut();
-  localStorage.clear(); sessionStorage.clear();
-  window.location.href = "login.html?v=99";
-}
-(async ()=>{
-  const ok = await checkAuth();
-  if(!ok) return;
-  await loadCategories();
-  await loadArticles();
-})();
+function copyLink(link){ navigator.clipboard.writeText(link).then(()=>alert('Lien copié !\n'+link)); }
+async function logout(){ await client.auth.signOut(); localStorage.clear(); sessionStorage.clear(); window.location.href = "login.html?v=99"; }
+(async ()=>{ const ok = await checkAuth(); if(!ok) return; await loadCategories(); await loadArticles(); })();
 </script>
 </body>
 </html>
