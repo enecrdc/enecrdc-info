@@ -68,10 +68,17 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allArticles = [];
 async function load(){
-  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,status,created_at,category:categories(name,slug)').eq('status','publie').order('created_at',{ascending:false}).limit(50);
   const el = document.getElementById('list');
-  if(error){ el.innerHTML = '<div class="empty">Impossible de charger les articles : '+error.message+'</div>'; return; }
-  if(!data || !data.length){ el.innerHTML = '<div class="empty">Aucun article publié pour le moment. Revenez bientôt.</div>'; return; }
+  // 1er essai : avec catégories
+  let res = await client.from('articles').select('title,excerpt,content,cover_image_url,status,created_at,category:categories(name,slug)').eq('status','publie').order('created_at',{ascending:false}).limit(50);
+  // Si ça échoue, 2ème essai : SANS catégories (pour ne plus rester bloqué)
+  if(res.error){
+    console.log('Avec catégories a échoué :', res.error.message);
+    res = await client.from('articles').select('title,excerpt,content,cover_image_url,status,created_at,category_id').eq('status','publie').order('created_at',{ascending:false}).limit(50);
+  }
+  const data = res.data, error = res.error;
+  if(error){ el.innerHTML = '<div class="empty"><b>Impossible de charger :</b><br>'+error.message+'<br><br>Code : '+error.code+'<br><br>Vérifiez la clé eyJ... dans index.html</div>'; return; }
+  if(!data || !data.length){ el.innerHTML = '<div class="empty">Aucun article publié pour le moment.<br>Vérifiez dans admin.html que vos articles sont bien en Publie.</div>'; return; }
   allArticles = data;
   render('all');
 }
@@ -82,11 +89,9 @@ function render(cat){
   let list = allArticles;
   if(cat !== 'all'){ list = allArticles.filter(a => getSlug(a).includes(cat) || getName(a).toLowerCase().includes(cat)); }
   if(!list.length){ el.innerHTML = '<div class="empty">Aucun article dans cette catégorie.</div>'; return; }
-  el.innerHTML = list.map((a,i) => '<div class="card">' + (a.cover_image_url ? '<img class="cover" src="'+a.cover_image_url+'" alt="'+a.title+'">' : '') + '<div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'<p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p id="prev-'+i+'" style="white-space:pre-line;">'+a.content.substring(0,400)+'...</p><p id="full-'+i+'" style="display:none;white-space:pre-line;">'+a.content+'</p>'...')+'</p><p id="prev-'+i+'">'+a.content.substring(0,400)+'...</p><p id="full-'+i+'" style="display:none;">'+a.content+'</p><button onclick="document.getElementById(\'prev-'+i+'\').style.display=\'none\';document.getElementById(\'full-'+i+'\').style.display=\'block\';this.style.display=\'none\';" style="background:#0A1F3D;color:#fff;padding:8px 12px;border-radius:20px;border:none;">Lire la suite →</button><br><br><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
+  el.innerHTML = list.map((a,i) => '<div class="card">' + (a.cover_image_url ? '<img class="cover" src="'+a.cover_image_url+'" alt="'+a.title+'">' : '') + '<div class="card-body"><span class="badge">'+getName(a).toUpperCase()+'</span><h2>'+a.title+'</h2><p>'+(a.excerpt||a.content.substring(0,180)+'...')+'</p><p id="prev-'+i+'">'+a.content.substring(0,400)+'...</p><p id="full-'+i+'" style="display:none;">'+a.content+'</p><button onclick="document.getElementById(\'prev-'+i+'\').style.display=\'none\';document.getElementById(\'full-'+i+'\').style.display=\'block\';this.style.display=\'none\';" style="background:#0A1F3D;color:#fff;padding:8px 12px;border-radius:20px;border:none;">Lire la suite →</button><br><br><small>Publié le '+new Date(a.created_at).toLocaleDateString('fr-FR')+'</small></div></div>').join('');
 }
 function filterCat(cat, btn){ document.querySelectorAll('.catbar button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(cat); }
 document.getElementById('date').textContent = 'Bukavu, ' + new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 load();
-</script>
-</body>
-</html>
+  </script>
