@@ -45,7 +45,14 @@ const SITE = "https://enecrdc.github.io/enecrdc-info";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const params = new URLSearchParams(window.location.search);
 const slug = params.get('slug');
-async function load(){
+function formatDateHeure(dateStr){
+  if(!dateStr) return '';
+  return new Date(dateStr).toLocaleString('fr-FR',{
+    timeZone: 'Africa/Kinshasa',
+    day: 'numeric', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}async function load(){
   const el = document.getElementById('content');
   if(!slug){ el.innerHTML = '<div class="card"><div class="card-body"><h2>Lien incomplet</h2><p>Ce lien n’a pas de slug. Ouvrez l’article depuis admin.html → Voir.</p><p>Slug reçu : (vide)</p><a href="index.html">← Retour à l’accueil</a></div></div>'; return; }
   const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,created_at,category:categories(name)').eq('slug', slug).eq('status','publie').single();
