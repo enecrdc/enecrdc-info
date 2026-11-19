@@ -3,300 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chargement de l'article... - ENECRDC.INFO</title>
-<meta name="description" id="meta-desc" content="ENECRDC.INFO - Info Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.">
-
-<!-- ===== OPEN GRAPH - Générique pour article.html ===== -->
-<!-- IMPORTANT : WhatsApp / Facebook / Messenger / LinkedIn ne lisent PAS le JavaScript. -->
-<!-- Pour que CHAQUE article affiche SA photo, tu dois partager le lien share/ : -->
-<!-- https://enecrdc.github.io/enecrdc-info/share/TON-SLUG.html -->
-<!-- La page share/ contient les OG statiques avec la vraie photo. -->
-<!-- Les balises ci-dessous sont mises à jour en JS pour le navigateur, mais ce sont les pages share/ qui servent pour WhatsApp. -->
+<title>Article - ENECRDC.INFO</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="ENECRDC.INFO">
 <meta property="og:title" id="og-title" content="ENECRDC.INFO - Info Kivu, RDC, Grands Lacs, Afrique et Monde">
-<meta property="og:description" id="og-desc" content="L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde.">
-<meta property="og:image" id="og-image" content="https://enecrdc.github.io/enecrdc-info/og-image.jpg">
+<meta property="og:description" id="og-desc" content="L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde. Vérifiée, de terrain.">
+<meta property="og:image" content="https://enecrdc.github.io/enecrdc-info/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url" id="og-url" content="https://enecrdc.github.io/enecrdc-info/">
-<meta property="og:locale" content="fr_FR">
+<meta property="og:image:type" content="image/jpeg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" id="tw-title" content="ENECRDC.INFO - Info Kivu, RDC, Grands Lacs, Afrique et Monde">
-<meta name="twitter:description" id="tw-desc" content="L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde.">
-<meta name="twitter:image" id="tw-image" content="https://enecrdc.github.io/enecrdc-info/og-image.jpg">
-<link rel="canonical" id="canonical-link" href="https://enecrdc.github.io/enecrdc-info/">
-
+<meta property="og:url" id="og-url" content="https://enecrdc.github.io/enecrdc-info/">
 <style>
-*{box-sizing:border-box}
-body{font-family:Arial,sans-serif;margin:0;background:#f4f4f4;color:#111;line-height:1.7}
-a{color:#0A2540}
-header{background:#0A2540;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-header a{color:#fff;text-decoration:none}
-.logo{font-size:22px;font-weight:800;letter-spacing:.5px}
-.logo span{color:#C9A227}
-nav a{margin-left:14px;font-size:14px}
-.hero{background:#0A2540;color:#fff;padding:26px 16px 30px}
-.hero h1{font-size:28px;line-height:1.25;margin:0 0 10px;max-width:900px}
-.hero p{color:#D9E2EC;max-width:900px;margin:0;font-size:15px}
-.wrap{max-width:900px;margin:0 auto;padding:16px}
-.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-.badge{display:inline-block;background:#C9A227;color:#111;font-weight:700;font-size:12px;padding:5px 10px;border-radius:999px;margin-bottom:12px}
-.meta{color:#666;font-size:13px;margin:10px 0 14px;line-height:1.6}
-.meta strong{color:#111}
-.cover{width:100%;border-radius:10px;display:block;margin:12px 0 16px;max-height:520px;object-fit:cover;background:#eee}
-.content{font-size:17px;line-height:1.8;white-space:pre-line;word-wrap:break-word}
-/* Sous-titres - Gras + Italique + Or ENECRDC */
-.content h2,.content h3,.article-content h2,.article-content h3,#content h2,#content h3{
-  font-weight:800;
-  font-style:italic;
-  font-size:1.18em;
-  margin:22px 0 10px 0;
-  color:#C9A227;
-  line-height:1.4;
-  border-left:4px solid #C9A227;
-  padding-left:10px;
-  white-space:normal;
-}
-.content img{max-width:100%;height:auto;border-radius:10px;display:block;margin:14px auto}
-.content a{color:#0A2540;font-weight:700}
-.subtitle{font-size:19px;line-height:1.5;color:#333;font-weight:600;margin:10px 0 14px}
-.lang-switch{margin:14px 0;padding:12px 14px;background:#FFF8E1;border:1px solid #C9A227;border-radius:10px;display:none}
-.lang-switch a{color:#0A2540;font-weight:800;text-decoration:none}
-.share{margin:18px 0 0;display:flex;flex-wrap:wrap;gap:8px}
-.btn{display:inline-block;padding:11px 16px;border-radius:999px;text-decoration:none;font-weight:700;font-size:14px;border:0;cursor:pointer}
-.btn-wa{background:#25D366;color:#fff}
-.btn-fb{background:#1877F2;color:#fff}
-.btn-msg{background:#0084FF;color:#fff}
-.btn-li{background:#0A66C2;color:#fff}
-.btn-copy{background:#0A2540;color:#fff}
-.btn-home{background:#fff;color:#0A2540;border:1px solid #0A2540}
-.small{font-size:13px;color:#666}
-footer{background:#0A2540;color:#fff;text-align:center;padding:22px 14px;margin-top:20px}
+body{font-family:Arial,sans-serif;margin:0;background:#F4F5F7;color:#111}
+header{background:#0A1F3D;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+header a{color:#fff;text-decoration:none}header strong{font-size:20px}header strong span{color:#C9A227}
+.hero{background:#0A1F3D;color:#fff;padding:20px 16px}
+.hero h1{font-size:24px;line-height:1.3;margin:0}.hero p{color:#CBD5E1;font-size:14px;line-height:1.6;margin:8px 0 0}
+.wrap{max-width:800px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card img.cover{width:100%;max-height:380px;object-fit:cover;display:block}
+.card-body{padding:20px}.badge{background:#C9A227;color:#0A1F3D;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
+.card-body h2{font-size:24px;margin:10px 0}.card-body p{line-height:1.8;color:#333;white-space:pre-line}
+.share{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.share a,.share button{padding:10px 14px;border-radius:999px;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-size:14px}
+.btn-wa{background:#25D366;color:#fff}.btn-copy{background:#C9A227;color:#0A1F3D}.btn-home{background:#0A1F3D;color:#fff}
+footer{background:#0A1F3D;color:#fff;padding:20px 16px;text-align:center;margin-top:20px}
 footer a{color:#C9A227;text-decoration:none}
-footer small{color:#D9E2EC}
-@media(max-width:600px){
-  .hero h1{font-size:24px}
-  .card{padding:16px}
-  .content{font-size:16px}
-  header{flex-wrap:wrap;gap:8px}
-  nav a{margin-left:10px}
-}
 </style>
 </head>
 <body>
-
-<header>
-  <a class="logo" href="index.html">ENEC<span>RDC</span>.INFO</a>
-  <nav><a href="index.html">← Accueil</a> <a href="index.html?cat=Politique">Politique</a> <a href="index.html?cat=Société">Société</a> <a href="index.html?cat=Développement">Développement</a></nav>
-</header>
-
-<section class="hero">
-  <h1>Info Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.</h1>
-  <p>L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde. Une information de proximité, nationale et internationale, au plus près des réalités.</p>
-</section>
-
-<main class="wrap">
-  <div id="content">Chargement de l'article...</div>
-  <p style="margin-top:16px"><a class="btn btn-home" href="index.html">← Retour à l'accueil</a></p>
-</main>
-
-<footer>
-  <strong>ENEC<span style="color:#C9A227">RDC</span>.INFO</strong><br>
-  <small>Info Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.</small><br><br>
-  📞 +243 962 471 683 • ✉️ enecrdcinfo@gmail.com • redaction@enecrdc.info<br><br>
-  <a href="index.html">Accueil</a> • <a href="login.html">Espace Rédaction</a><br><br>
-  <small>© 2026 ENECRDC.INFO - Tous droits réservés.</small>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<header><a href="index.html"><strong>ENEC<span>RDC</span>.INFO</strong></a><a href="index.html">← Accueil</a></header>
+<div class="hero"><h1>Info Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.</h1><p>L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde. Une information de proximité, nationale et internationale, au plus près des réalités.</p></div>
+<div class="wrap"><div id="content"><p>Chargement de l'article...</p></div></div>
+<footer><strong>ENEC<span style="color:#C9A227">RDC</span>.INFO</strong><br><br>📞 +243 962 471 683 • ✉️ enecrdcinfo@gmail.com • redaction@enecrdc.info<br><br><a href="index.html">Accueil</a><br><br><small>© 2026 ENECRDC.INFO - Tous droits réservés.</small></footer>
 <script>
-// ===== CONFIG - À CONSERVER : Reprends TES valeurs actuelles =====
-const SITE = 'https://enecrdc.github.io/enecrdc-info';
-const SUPABASE_URL = 'https://vxcqmskiaxttipmiccku.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo';
+const SUPABASE_URL = "https://vxcqmskiaxttipmiccku.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo";
+const SITE = "https://enecrdc.github.io/enecrdc-info";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ===== DATE + HEURE KINSHASA (UTC+2) - Heure de publication réelle, pas heure du visiteur =====
+const params = new URLSearchParams(window.location.search);
+const slug = params.get('slug');
 function formatDateHeure(dateStr){
   if(!dateStr) return '';
-  try{
-    return new Date(dateStr).toLocaleString('fr-FR',{
-      timeZone:'Africa/Kinshasa',
-      day:'numeric', month:'long', year:'numeric',
-      hour:'2-digit', minute:'2-digit'
-    });
-  }catch(e){ return new Date(dateStr).toLocaleString('fr-FR'); }
+  return new Date(dateStr).toLocaleString('fr-FR',{
+    timeZone: 'Africa/Kinshasa',
+    day: 'numeric', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
 }
-function getDatePublication(a){
-  return a.published_at || a.created_at;
-}
-
-// ===== SOUS-TITRES : ligne ## => gras + italique + or =====
-function formatContenu(texte){
-  if(!texte) return '';
-  let html = texte.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  html = html.split('\n').map(function(ligne){
-    let t = ligne.trim();
-    if(t.startsWith('## ')){
-      return '<h2>' + t.replace('## ','') + '</h2>';
-    }
-    if(t.startsWith('# ')){
-      return '<h2>' + t.replace('# ','') + '</h2>';
-    }
-    return ligne;
-  }).join('\n');
-  return html;
-}
-
-function escapeHtml(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ===== PHOTO : Correction du problème photo générique =====
-// Cause : admin.html enregistre la photo dans image_url (colonne principale),
-// mais article.html cherchait parfois un autre nom, ou recevait seulement le nom du fichier.
-// Cette fonction teste TOUS les noms possibles, en petites lignes (pas de coupure sur téléphone),
-// et reconstruit l'URL Storage si admin a enregistré seulement le nom du fichier.
-function getImage(a){
-  let raw = String(a.image_url || '').trim();
-  if(!raw) return SITE + '/og-image.jpg';
-  return raw;
-  }
-function getExcerpt(a){
-  let e = a.excerpt || a.resume || a.summary || a.description || '';
-  if(e) return String(e).substring(0,160);
-  let c = String(a.content||'').replace(/\n/g,' ').trim();
-  return c.substring(0,160);
-}
-function getAuthor(a){
-  return a.author || a.auteur || a.journaliste || a.redacteur || 'ENECRDC.INFO';
-}
-function getCategory(a){
-  return a.category || a.categorie || a.cat || '';
-}
-function getLang(a){
-  return String(a.lang || a.language || a.langue || 'fr').toLowerCase();
-}
-function getTranslationSlug(a){
-  // On ne devine JAMAIS une traduction. On utilise uniquement les colonnes si elles existent.
-  // Si aucune n'existe, on ne montre PAS le lien de traduction.
-  let lang = getLang(a);
-  if(lang === 'fr'){
-    if(a.slug_en) return a.slug_en;
-    if(a.translation_slug_en) return a.translation_slug_en;
-    if(a.slug_translation_en) return a.slug_translation_en;
-    if(a.translation_slug && a.translation_lang === 'en') return a.translation_slug;
-    return '';
-  } else {
-    if(a.slug_fr) return a.slug_fr;
-    if(a.translation_slug_fr) return a.translation_slug_fr;
-    if(a.slug_translation_fr) return a.slug_translation_fr;
-    if(a.translation_slug && a.translation_lang === 'fr') return a.translation_slug;
-    return '';
-  }
-}
-
 async function load(){
   const el = document.getElementById('content');
-  const params = new URLSearchParams(location.search);
-  const slug = params.get('slug');
-  if(!slug){
-    el.innerHTML = '<div class="card"><h2>Article introuvable</h2><p>Aucun article sélectionné.</p><p><a href="index.html">← Retour à l\'accueil</a></p></div>';
-    return;
+  if(!slug){ el.innerHTML = '<div class="card"><div class="card-body"><h2>Lien incomplet</h2><p>Ce lien n’a pas de slug. Ouvrez l’article depuis admin.html → Voir.</p><p>Slug reçu : (vide)</p><a href="index.html">← Retour à l’accueil</a></div></div>'; return; }
+  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,created_at,category:categories(name)').eq('slug', slug).eq('status','publie').single();
+  if(error || !data){ 
+    el.innerHTML = '<div class="card"><div class="card-body"><h2>Article introuvable</h2><p>Slug demandé : <b>'+slug+'</b></p><p>Erreur Supabase : <b>'+(error ? error.message : 'aucune donnée')+'</b></p><p>Code : '+(error ? error.code : '-')+'</p><p>Vérifiez : 1) L’article est bien en Publie dans admin.html 2) Le slug dans Supabase est exactement le même</p><a href="index.html">← Retour à l’accueil</a></div></div>'; 
+    return; 
   }
-
-  // Récupération - On garde la table et les colonnes existantes : articles, slug
-  let data = null;
-  let error = null;
-  try{
-    const res = await client.from('articles').select('*').eq('slug', slug).single();
-    data = res.data;
-    error = res.error;
-  }catch(e){
-    error = e;
-  }
-  if(error || !data){
-    el.innerHTML = '<div class="card"><h2>Erreur de chargement</h2>'
-      + '<p><strong>Slug demandé :</strong> ' + escapeHtml(slug) + '</p>'
-      + '<p><strong>Erreur :</strong> ' + escapeHtml(error ? (error.message || JSON.stringify(error)) : 'Aucune donnée') + '</p>'
-      + '<p><a href="index.html">← Retour à l\'accueil</a></p></div>';
-    return;
-  }
-
-  const img = getImage(data);
-  const isGeneric = (img === SITE + '/og-image.jpg');
-  const excerpt = getExcerpt(data);
-  const title = data.title || 'Sans titre';
-  const lang = getLang(data);
-  const transSlug = getTranslationSlug(data);
-
-  // Mise à jour des balises pour le navigateur (WhatsApp utilise la page share/, pas celle-ci)
-  document.title = title + ' - ENECRDC.INFO';
-  const metaDesc = document.getElementById('meta-desc');
-  if(metaDesc) metaDesc.setAttribute('content', excerpt);
-  const ogTitle = document.getElementById('og-title'); if(ogTitle) ogTitle.setAttribute('content', title);
-  const ogDesc = document.getElementById('og-desc'); if(ogDesc) ogDesc.setAttribute('content', excerpt);
-  const ogImage = document.getElementById('og-image'); if(ogImage) ogImage.setAttribute('content', img);
-  const ogUrl = document.getElementById('og-url'); if(ogUrl) ogUrl.setAttribute('content', SITE + '/article.html?slug=' + encodeURIComponent(slug));
-  const twTitle = document.getElementById('tw-title'); if(twTitle) twTitle.setAttribute('content', title);
-  const twDesc = document.getElementById('tw-desc'); if(twDesc) twDesc.setAttribute('content', excerpt);
-  const twImage = document.getElementById('tw-image'); if(twImage) twImage.setAttribute('content', img);
-  const canon = document.getElementById('canonical-link'); if(canon) canon.setAttribute('href', SITE + '/article.html?slug=' + encodeURIComponent(slug));
-
-  // Dates : publication réelle + modification si différente
-  const pub = formatDateHeure(getDatePublication(data));
-  let datesHtml = '';
-  if(pub) datesHtml += 'Publié le ' + pub + ' (Kinshasa)';
-  if(data.updated_at && data.updated_at !== data.created_at && data.updated_at !== data.published_at){
-    const upd = formatDateHeure(data.updated_at);
-    if(upd) datesHtml += '<br>Mis à jour le ' + upd + ' (Kinshasa)';
-  }
-
-  const subtitle = data.subtitle || data.sous_titre || '';
-  const category = getCategory(data);
-  const author = getAuthor(data);
-
-  // URLs de partage : on partage la page share/ (OG statiques) si elle existe.
-  // Si tu n'as pas encore généré la page share/ pour cet article, le lien share/ renverra 404.
-  // Dans ce cas, partage le lien article.html (il marchera, mais avec l'image générique).
-  // Recommandé : toujours générer la page share/ via le bouton dans admin.html.
-  const articleUrl = SITE + '/article.html?slug=' + encodeURIComponent(slug);
-  const shareUrl = SITE + '/share/' + encodeURIComponent(slug) + '.html';
-  const wa = 'https://wa.me/?text=' + encodeURIComponent(title + ' - ' + shareUrl);
-  const fb = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl);
-  const msg = 'https://www.messenger.com/share?link=' + encodeURIComponent(shareUrl);
-  const li = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(shareUrl);
-
-  // Bilinguisme : on n'affiche le lien QUE si la traduction existe vraiment
-  let langHtml = '';
-  if(transSlug){
-    if(lang === 'fr'){
-      langHtml = '<div class="lang-switch" style="display:block">🌍 Version en anglais disponible : <a href="article.html?slug=' + encodeURIComponent(transSlug) + '">Read in English →</a></div>';
-    } else {
-      langHtml = '<div class="lang-switch" style="display:block">🌍 Version en français disponible : <a href="article.html?slug=' + encodeURIComponent(transSlug) + '">← Lire en français</a></div>';
-    }
-  }
-
-  el.innerHTML = '<div class="card">'
-    + (category ? '<span class="badge">' + escapeHtml(category) + '</span>' : '')
-    + '<h1 style="margin:0 0 8px;font-size:28px;line-height:1.3">' + escapeHtml(title) + '</h1>'
-    + (subtitle ? '<div class="subtitle">' + escapeHtml(subtitle) + '</div>' : '')
-    + '<div class="meta">Par <strong>' + escapeHtml(author) + '</strong> • ENECRDC.INFO<br>' + datesHtml + '</div>'
-    + langHtml
-    + '<img class="cover" src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '">'
-    + '<div class="content">' + formatContenu(data.content || '') + '</div>'
-    + '<div class="share">'
-    + '<a class="btn btn-wa" href="' + wa + '" target="_blank" rel="noopener">💬 WhatsApp</a>'
-    + '<a class="btn btn-fb" href="' + fb + '" target="_blank" rel="noopener">📘 Facebook</a>'
-    + '<a class="btn btn-msg" href="' + msg + '" target="_blank" rel="noopener">💬 Messenger</a>'
-    + '<a class="btn btn-li" href="' + li + '" target="_blank" rel="noopener">💼 LinkedIn</a>'
-    + '<button class="btn btn-copy" onclick="navigator.clipboard.writeText(\'' + shareUrl + '\').then(()=>alert(\'Lien share copié ! Colle-le dans WhatsApp / Facebook.\'))">🔗 Copier le lien share</button>'
-    + '</div>'
-    + '<p class="small" style="margin-top:12px">Lien à partager pour avoir la photo de cet article :<br>' + escapeHtml(shareUrl) + '<br><span class="small">Si tu n\'as pas encore généré la page share/ pour cet article, utilise le bouton « Publier page partage » dans admin.html, ou partage : ' + escapeHtml(articleUrl) + ' ' + (isGeneric ? '(cet article n\'a pas de photo, l\'image générique s\'affichera)' : '(photo propre à cet article)') + '</span></p>'
-    + '</div>';
+  document.title = data.title + ' - ENECRDC.INFO';
+  const link = SITE + '/article.html?slug=' + slug;
+  const wa = 'https://wa.me/?text=' + encodeURIComponent('*' + data.title + '*\n\nLire ici : ' + link);
+  el.innerHTML = '<div class="card">' + (data.cover_image_url ? '<img class="cover" src="'+data.cover_image_url+'">' : '') + '<div class="card-body"><span class="badge">'+(data.category?data.category.name.toUpperCase():'À LA UNE')+'</span><h2>'+data.title+'</h2><small>'Publié le '+formatDateHeure(data.published_at || data.created_at)+' (Kinshasa)'+' • ENECRDC.INFO - Kivu</small>'<div class="content">'+formatContenu(data.content||'')+'</div>'<div class="share"><a class="btn-wa" href="'+wa+'" target="_blank">💬 Partager sur WhatsApp</a><button class="btn-copy" onclick="navigator.clipboard.writeText(\''+link+'\').then(()=>alert(\'Lien copié !\'))">📋 Copier le lien</button><a class="btn-home" href="index.html">← Tous les articles</a></div></div></div>';
 }
 load();
 </script>
-</body>
-</html>
