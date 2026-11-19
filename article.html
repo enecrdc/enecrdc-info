@@ -52,22 +52,8 @@ function formatDateHeure(dateStr){
     day: 'numeric', month: 'long', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
   });
-}// Sous-titres : ligne qui commence par ## => gras + italique + or
-function formatContenu(texte){
-  if(!texte) return '';
-  let html = texte.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  html = html.split('\n').map(ligne => {
-    let t = ligne.trim();
-    if(t.startsWith('## ')){
-      return '<h2>' + t.replace('## ','') + '</h2>';
-    }
-    if(t.startsWith('# ')){
-      return '<h2>' + t.replace('# ','') + '</h2>';
-    }
-    return ligne;
-  }).join('\n');
-  return html;
-}async function load(){
+}
+async function load(){
   const el = document.getElementById('content');
   if(!slug){ el.innerHTML = '<div class="card"><div class="card-body"><h2>Lien incomplet</h2><p>Ce lien n’a pas de slug. Ouvrez l’article depuis admin.html → Voir.</p><p>Slug reçu : (vide)</p><a href="index.html">← Retour à l’accueil</a></div></div>'; return; }
   const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,created_at,category:categories(name)').eq('slug', slug).eq('status','publie').single();
