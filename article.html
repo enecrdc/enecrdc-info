@@ -7,7 +7,7 @@
 <meta name="description" id="meta-desc" content="ENECRDC.INFO - Info Kivu, RDC, Grands Lacs, Afrique et Monde — Vérifiée, de terrain.">
 
 <!-- ===== OPEN GRAPH - Générique pour article.html ===== -->
-<!-- IMPORTANT : WhatsApp / Facebook ne lisent PAS le JavaScript. -->
+<!-- IMPORTANT : WhatsApp / Facebook / Messenger / LinkedIn ne lisent PAS le JavaScript. -->
 <!-- Pour que CHAQUE article affiche SA photo, tu dois partager le lien share/ : -->
 <!-- https://enecrdc.github.io/enecrdc-info/share/TON-SLUG.html -->
 <!-- La page share/ contient les OG statiques avec la vraie photo. -->
@@ -44,7 +44,7 @@ nav a{margin-left:14px;font-size:14px}
 .badge{display:inline-block;background:#C9A227;color:#111;font-weight:700;font-size:12px;padding:5px 10px;border-radius:999px;margin-bottom:12px}
 .meta{color:#666;font-size:13px;margin:10px 0 14px;line-height:1.6}
 .meta strong{color:#111}
-.cover{width:100%;border-radius:10px;display:block;margin:12px 0 16px;max-height:520px;object-fit:cover}
+.cover{width:100%;border-radius:10px;display:block;margin:12px 0 16px;max-height:520px;object-fit:cover;background:#eee}
 .content{font-size:17px;line-height:1.8;white-space:pre-line;word-wrap:break-word}
 /* Sous-titres - Gras + Italique + Or ENECRDC */
 .content h2,.content h3,.article-content h2,.article-content h3,#content h2,#content h3{
@@ -117,7 +117,7 @@ const SUPABASE_URL = 'https://vxcqmskiaxttipmiccku.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4Y3Ftc2tpYXh0dGlwbWljY2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0MTk3MTAsImV4cCI6MjEwOTk5NTcxMH0.Pf3LYtl2VAfd-Lk97WeAxL1S5Vgg50Daj08nAp4hOjo';
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ===== DATE + HEURE KINSHASA (UTC+2) - Heure de publication réelle =====
+// ===== DATE + HEURE KINSHASA (UTC+2) - Heure de publication réelle, pas heure du visiteur =====
 function formatDateHeure(dateStr){
   if(!dateStr) return '';
   try{
@@ -152,19 +152,36 @@ function formatContenu(texte){
 function escapeHtml(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ===== PHOTO : Correction du problème photo générique =====
+// Cause : admin.html enregistre la photo dans image_url (colonne principale),
+// mais article.html cherchait parfois un autre nom, ou recevait seulement le nom du fichier.
+// Cette fonction teste TOUS les noms possibles, en petites lignes (pas de coupure sur téléphone),
+// et reconstruit l'URL Storage si admin a enregistré seulement le nom du fichier.
 function getImage(a){
-  if(a.image_url) return a.image_url;
-  if(a.cover_url) return a.cover_url;
-  if(a.photo_url) return a.photo_url;
-  if(a.cover_image) return a.cover_image;
-  if(a.main_image) return a.main_image;
-  if(a.cover) return a.cover;
-  if(a.photo) return a.photo;
-  if(a.image) return a.image;
-  if(a.thumbnail) return a.thumbnail;
-  if(a.media_url) return a.media_url;
-  return SITE + '/og-image.jpg';
+  let raw = '';
+  if(a.image_url) raw = a.image_url;
+  else if(a.cover_url) raw = a.cover_url;
+  else if(a.photo_url) raw = a.photo_url;
+  else if(a.cover_image) raw = a.cover_image;
+  else if(a.main_image) raw = a.main_image;
+  else if(a.cover) raw = a.cover;
+  else if(a.photo) raw = a.photo;
+  else if(a.image) raw = a.image;
+  else if(a.thumbnail) raw = a.thumbnail;
+  else if(a.media_url) raw = a.media_url;
+  else if(a.url_image) raw = a.url_image;
+  else if(a.imageUrl) raw = a.imageUrl;
+  raw = String(raw || '').trim();
+  if(!raw) return SITE + '/og-image.jpg';
+  if(raw.startsWith('http://')) return raw;
+  if(raw.startsWith('https://')) return raw;
+  if(raw.startsWith('data:image')) return raw;
+  if(raw.startsWith('/')) raw = raw.slice(1);
+  if(raw.startsWith('media/')) raw = raw.replace('media/','');
+  return SUPABASE_URL + '/storage/v1/object/public/media/' + raw;
 }
+
 function getExcerpt(a){
   let e = a.excerpt || a.resume || a.summary || a.description || '';
   if(e) return String(e).substring(0,160);
@@ -178,17 +195,24 @@ function getCategory(a){
   return a.category || a.categorie || a.cat || '';
 }
 function getLang(a){
-  return (a.lang || a.language || a.langue || 'fr').toLowerCase();
+  return String(a.lang || a.language || a.langue || 'fr').toLowerCase();
 }
 function getTranslationSlug(a){
   // On ne devine JAMAIS une traduction. On utilise uniquement les colonnes si elles existent.
-  // Colonnes acceptées : slug_en / slug_fr / translation_slug / slug_translation / linked_slug
   // Si aucune n'existe, on ne montre PAS le lien de traduction.
   let lang = getLang(a);
   if(lang === 'fr'){
-    return a.slug_en || a.translation_slug_en || a.slug_translation_en || (a.translation_slug && a.translation_lang === 'en' ? a.translation_slug : '') || '';
+    if(a.slug_en) return a.slug_en;
+    if(a.translation_slug_en) return a.translation_slug_en;
+    if(a.slug_translation_en) return a.slug_translation_en;
+    if(a.translation_slug && a.translation_lang === 'en') return a.translation_slug;
+    return '';
   } else {
-    return a.slug_fr || a.translation_slug_fr || a.slug_translation_fr || (a.translation_slug && a.translation_lang === 'fr' ? a.translation_slug : '') || '';
+    if(a.slug_fr) return a.slug_fr;
+    if(a.translation_slug_fr) return a.translation_slug_fr;
+    if(a.slug_translation_fr) return a.slug_translation_fr;
+    if(a.translation_slug && a.translation_lang === 'fr') return a.translation_slug;
+    return '';
   }
 }
 
@@ -202,13 +226,25 @@ async function load(){
   }
 
   // Récupération - On garde la table et les colonnes existantes : articles, slug
-  const { data, error } = await client.from('articles').select('*').eq('slug', slug).single();
+  let data = null;
+  let error = null;
+  try{
+    const res = await client.from('articles').select('*').eq('slug', slug).single();
+    data = res.data;
+    error = res.error;
+  }catch(e){
+    error = e;
+  }
   if(error || !data){
-    el.innerHTML = '<div class="card"><h2>Article introuvable</h2><p>Cet article n\'existe pas ou a été retiré.</p><p><a href="index.html">← Retour à l\'accueil</a></p></div>';
+    el.innerHTML = '<div class="card"><h2>Erreur de chargement</h2>'
+      + '<p><strong>Slug demandé :</strong> ' + escapeHtml(slug) + '</p>'
+      + '<p><strong>Erreur :</strong> ' + escapeHtml(error ? (error.message || JSON.stringify(error)) : 'Aucune donnée') + '</p>'
+      + '<p><a href="index.html">← Retour à l\'accueil</a></p></div>';
     return;
   }
 
   const img = getImage(data);
+  const isGeneric = (img === SITE + '/og-image.jpg');
   const excerpt = getExcerpt(data);
   const title = data.title || 'Sans titre';
   const lang = getLang(data);
@@ -236,7 +272,6 @@ async function load(){
     if(upd) datesHtml += '<br>Mis à jour le ' + upd + ' (Kinshasa)';
   }
 
-  // Sous-titre : colonne subtitle / sous_titre si elle existe, sinon première phrase du contenu
   const subtitle = data.subtitle || data.sous_titre || '';
   const category = getCategory(data);
   const author = getAuthor(data);
@@ -268,7 +303,7 @@ async function load(){
     + (subtitle ? '<div class="subtitle">' + escapeHtml(subtitle) + '</div>' : '')
     + '<div class="meta">Par <strong>' + escapeHtml(author) + '</strong> • ENECRDC.INFO<br>' + datesHtml + '</div>'
     + langHtml
-    + (img ? '<img class="cover" src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" onerror="this.style.display=\'none\'">' : '')
+    + '<img class="cover" src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" onerror="if(!this.dataset.fallback){this.dataset.fallback=1; this.src=\'' + SITE + '/og-image.jpg\';}">'
     + '<div class="content">' + formatContenu(data.content || '') + '</div>'
     + '<div class="share">'
     + '<a class="btn btn-wa" href="' + wa + '" target="_blank" rel="noopener">💬 WhatsApp</a>'
@@ -277,7 +312,7 @@ async function load(){
     + '<a class="btn btn-li" href="' + li + '" target="_blank" rel="noopener">💼 LinkedIn</a>'
     + '<button class="btn btn-copy" onclick="navigator.clipboard.writeText(\'' + shareUrl + '\').then(()=>alert(\'Lien share copié ! Colle-le dans WhatsApp / Facebook.\'))">🔗 Copier le lien share</button>'
     + '</div>'
-    + '<p class="small" style="margin-top:12px">Lien à partager pour avoir la photo de cet article :<br>' + escapeHtml(shareUrl) + '<br><span class="small">Si tu n\'as pas encore généré la page share/ pour cet article, utilise le bouton « Publier page partage » dans admin.html, ou partage : ' + escapeHtml(articleUrl) + '</span></p>'
+    + '<p class="small" style="margin-top:12px">Lien à partager pour avoir la photo de cet article :<br>' + escapeHtml(shareUrl) + '<br><span class="small">Si tu n\'as pas encore généré la page share/ pour cet article, utilise le bouton « Publier page partage » dans admin.html, ou partage : ' + escapeHtml(articleUrl) + ' ' + (isGeneric ? '(cet article n\'a pas de photo, l\'image générique s\'affichera)' : '(photo propre à cet article)') + '</span></p>'
     + '</div>';
 }
 load();
