@@ -155,8 +155,17 @@ function escapeHtml(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function getImage(a){
-  return a.image_url || a.cover_url || a.photo_url || a.cover_image || a.main_image || a.cover || a.photo || a.image || a.thumbnail || a.media_url || a.url_image || SITE + '/og-image.jpg';
-}
+  if(a.image_url) return a.image_url;
+  if(a.cover_url) return a.cover_url;
+  if(a.photo_url) return a.photo_url;
+  if(a.cover_image) return a.cover_image;
+  if(a.main_image) return a.main_image;
+  if(a.cover) return a.cover;
+  if(a.photo) return a.photo;
+  if(a.image) return a.image;
+  if(a.thumbnail) return a.thumbnail;
+  if(a.media_url) return a.media_url;
+  return SITE + '/og-image.jpg';
 }
 function getExcerpt(a){
   let e = a.excerpt || a.resume || a.summary || a.description || '';
