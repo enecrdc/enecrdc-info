@@ -85,7 +85,19 @@ async function load(){
 }
 function getSlug(a){ return (a.category && a.category.slug) ? a.category.slug : ''; }
 function getName(a){ return (a.category && a.category.name) ? a.category.name : 'À la une'; }
-function render(cat){
+// Date + heure Kinshasa (UTC+2) - Heure de publication réelle, pas heure de consultation
+function formatDateHeure(dateStr){
+  if(!dateStr) return '';
+  return new Date(dateStr).toLocaleString('fr-FR',{
+    timeZone: 'Africa/Kinshasa',
+    day: 'numeric', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+function getDatePublication(a){
+  return a.published_at || a.created_at;
+}
+function render(cat){function render(cat){
   const el = document.getElementById('list');
   let list = allArticles;
   if(cat !== 'all'){ list = allArticles.filter(a => getSlug(a).includes(cat) || getName(a).toLowerCase().includes(cat)); }
