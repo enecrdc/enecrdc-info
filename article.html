@@ -155,7 +155,8 @@ function escapeHtml(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function getImage(a){
-  return a.image_url || a.cover_url || a.photo_url || a.image || SITE + '/og-image.jpg';
+  return a.image_url || a.cover_url || a.photo_url || a.cover_image || a.main_image || a.cover || a.photo || a.image || a.thumbnail || a.media_url || a.url_image || SITE + '/og-image.jpg';
+}
 }
 function getExcerpt(a){
   let e = a.excerpt || a.resume || a.summary || a.description || '';
