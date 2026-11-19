@@ -97,7 +97,7 @@ function formatDateHeure(dateStr){
 function getDatePublication(a){
   return a.published_at || a.created_at;
 }
-function render(cat){function render(cat){
+function render(cat){
   const el = document.getElementById('list');
   let list = allArticles;
   if(cat !== 'all'){ list = allArticles.filter(a => getSlug(a).includes(cat) || getName(a).toLowerCase().includes(cat)); }
