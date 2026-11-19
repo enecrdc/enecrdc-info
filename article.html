@@ -284,7 +284,7 @@ async function load(){
     + (subtitle ? '<div class="subtitle">' + escapeHtml(subtitle) + '</div>' : '')
     + '<div class="meta">Par <strong>' + escapeHtml(author) + '</strong> • ENECRDC.INFO<br>' + datesHtml + '</div>'
     + langHtml
-    + '<img class="cover" src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" onerror="if(!this.dataset.fallback){this.dataset.fallback=1; this.src=\'' + SITE + '/og-image.jpg\';}">'
+    + '<img class="cover" src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '">'
     + '<div class="content">' + formatContenu(data.content || '') + '</div>'
     + '<div class="share">'
     + '<a class="btn btn-wa" href="' + wa + '" target="_blank" rel="noopener">💬 WhatsApp</a>'
