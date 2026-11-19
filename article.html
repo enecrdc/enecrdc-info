@@ -9,7 +9,7 @@
 <meta property="og:site_name" content="ENECRDC.INFO">
 <meta property="og:title" id="og-title" content="ENECRDC.INFO - Info Kivu, RDC, Grands Lacs, Afrique et Monde">
 <meta property="og:description" id="og-desc" content="L'actualité générale, le développement et les grands enjeux de société, du Kivu au reste du monde. Vérifiée, de terrain.">
-<meta property="og:image" content="https://enecrdc.github.io/enecrdc-info/og-image.jpg">
+<meta property="og:image" id="og-image" content="https://enecrdc.github.io/enecrdc-info/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/jpeg">
@@ -26,9 +26,12 @@ header a{color:#fff;text-decoration:none}header strong{font-size:20px}header str
 .card img.cover{width:100%;max-height:380px;object-fit:cover;display:block}
 .card-body{padding:20px}.badge{background:#C9A227;color:#0A1F3D;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px}
 .card-body h2{font-size:24px;margin:10px 0}.card-body p{line-height:1.8;color:#333;white-space:pre-line}
+.content{font-size:16px;line-height:1.8;white-space:pre-line;word-wrap:break-word}
+.content h2{font-weight:800;font-style:italic;font-size:1.15em;margin:20px 0 8px;color:#C9A227;border-left:4px solid #C9A227;padding-left:10px}
+.content img{max-width:100%;height:auto;border-radius:10px;display:block;margin:12px auto}
 .share{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
 .share a,.share button{padding:10px 14px;border-radius:999px;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-size:14px}
-.btn-wa{background:#25D366;color:#fff}.btn-copy{background:#C9A227;color:#0A1F3D}.btn-home{background:#0A1F3D;color:#fff}
+.btn-wa{background:#25D366;color:#fff}.btn-fb{background:#1877F2;color:#fff}.btn-copy{background:#C9A227;color:#0A1F3D}.btn-home{background:#0A1F3D;color:#fff}
 footer{background:#0A1F3D;color:#fff;padding:20px 16px;text-align:center;margin-top:20px}
 footer a{color:#C9A227;text-decoration:none}
 </style>
@@ -45,6 +48,7 @@ const SITE = "https://enecrdc.github.io/enecrdc-info";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const params = new URLSearchParams(window.location.search);
 const slug = params.get('slug');
+
 function formatDateHeure(dateStr){
   if(!dateStr) return '';
   return new Date(dateStr).toLocaleString('fr-FR',{
@@ -53,18 +57,118 @@ function formatDateHeure(dateStr){
     hour: '2-digit', minute: '2-digit'
   });
 }
+
+function escapeHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatContenu(texte){
+  if(!texte) return '';
+  let html = String(texte).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  html = html.split('\n').map(function(ligne){
+    let t = ligne.trim();
+    if(t.startsWith('## ')){
+      return '<h2>' + t.substring(3) + '</h2>';
+    }
+    if(t.startsWith('# ')){
+      return '<h2>' + t.substring(2) + '</h2>';
+    }
+    return ligne;
+  }).join('\n');
+  return html;
+}
+
+function getImage(a){
+  let raw = a.image_url || a.cover_image_url || a.cover_url || a.photo_url || a.cover_image || a.photo || a.image || a.thumbnail || '';
+  raw = String(raw || '').trim();
+  if(!raw) return SITE + '/og-image.jpg';
+  if(raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('data:image')) return raw;
+  if(raw.startsWith('/')) raw = raw.slice(1);
+  if(raw.startsWith('media/')) raw = raw.replace('media/','');
+  return SUPABASE_URL + '/storage/v1/object/public/media/' + raw;
+}
+
+function getCategory(a){
+  if(!a) return 'À LA UNE';
+  if(typeof a.category === 'string' && a.category) return a.category;
+  if(a.category && a.category.name) return a.category.name;
+  if(a.categorie) return a.categorie;
+  return 'À LA UNE';
+}
+
+function getAuthor(a){
+  return a.author || a.auteur || a.journaliste || 'ENECRDC.INFO';
+}
+
 async function load(){
   const el = document.getElementById('content');
-  if(!slug){ el.innerHTML = '<div class="card"><div class="card-body"><h2>Lien incomplet</h2><p>Ce lien n’a pas de slug. Ouvrez l’article depuis admin.html → Voir.</p><p>Slug reçu : (vide)</p><a href="index.html">← Retour à l’accueil</a></div></div>'; return; }
-  const {data, error} = await client.from('articles').select('title,excerpt,content,cover_image_url,created_at,category:categories(name)').eq('slug', slug).eq('status','publie').single();
-  if(error || !data){ 
-    el.innerHTML = '<div class="card"><div class="card-body"><h2>Article introuvable</h2><p>Slug demandé : <b>'+slug+'</b></p><p>Erreur Supabase : <b>'+(error ? error.message : 'aucune donnée')+'</b></p><p>Code : '+(error ? error.code : '-')+'</p><p>Vérifiez : 1) L’article est bien en Publie dans admin.html 2) Le slug dans Supabase est exactement le même</p><a href="index.html">← Retour à l’accueil</a></div></div>'; 
-    return; 
+  if(!slug){
+    el.innerHTML = '<div class="card"><div class="card-body"><h2>Lien incomplet</h2><p>Ce lien n’a pas de slug. Ouvrez l’article depuis admin.html → Voir.</p><p>Slug reçu : (vide)</p><a href="index.html">← Retour à l’accueil</a></div></div>';
+    return;
   }
-  document.title = data.title + ' - ENECRDC.INFO';
-  const link = SITE + '/article.html?slug=' + slug;
-  const wa = 'https://wa.me/?text=' + encodeURIComponent('*' + data.title + '*\n\nLire ici : ' + link);
-  el.innerHTML = '<div class="card">' + (data.cover_image_url ? '<img class="cover" src="'+data.cover_image_url+'">' : '') + '<div class="card-body"><span class="badge">'+(data.category?data.category.name.toUpperCase():'À LA UNE')+'</span><h2>'+data.title+'</h2><small>'Publié le '+formatDateHeure(data.published_at || data.created_at)+' (Kinshasa)'+' • ENECRDC.INFO - Kivu</small>'<div class="content">'+formatContenu(data.content||'')+'</div>'<div class="share"><a class="btn-wa" href="'+wa+'" target="_blank">💬 Partager sur WhatsApp</a><button class="btn-copy" onclick="navigator.clipboard.writeText(\''+link+'\').then(()=>alert(\'Lien copié !\'))">📋 Copier le lien</button><a class="btn-home" href="index.html">← Tous les articles</a></div></div></div>';
+  let data = null;
+  let error = null;
+  try{
+    const res = await client.from('articles').select('*').eq('slug', slug).limit(1);
+    if(res.error) error = res.error;
+    else if(res.data && res.data.length > 0) data = res.data[0];
+    else error = { message: 'Aucun article avec ce slug', code: 'PGRST116' };
+  }catch(e){
+    error = e;
+  }
+  if(error || !data){
+    el.innerHTML = '<div class="card"><div class="card-body"><h2>Article introuvable</h2><p>Slug demandé : <b>' + escapeHtml(slug) + '</b></p><p>Erreur Supabase : <b>' + escapeHtml(error ? error.message : 'aucune donnée') + '</b></p><p>Code : ' + escapeHtml(error ? (error.code || '-') : '-') + '</p><p>Vérifiez : 1) L’article existe bien dans Supabase 2) Le slug dans Supabase est exactement le même</p><a href="index.html">← Retour à l’accueil</a></div></div>';
+    return;
+  }
+
+  const img = getImage(data);
+  const title = data.title || 'Sans titre';
+  const excerpt = data.excerpt || data.resume || '';
+  const category = getCategory(data);
+  const author = getAuthor(data);
+  const pub = formatDateHeure(data.published_at || data.created_at);
+  let datesHtml = '';
+  if(pub) datesHtml += 'Publié le ' + pub + ' (Kinshasa)';
+  if(data.updated_at && data.updated_at !== data.created_at && data.updated_at !== data.published_at){
+    const upd = formatDateHeure(data.updated_at);
+    if(upd) datesHtml += '<br>Mis à jour le ' + upd + ' (Kinshasa)';
+  }
+
+  document.title = title + ' - ENECRDC.INFO';
+  const ogTitle = document.getElementById('og-title');
+  if(ogTitle) ogTitle.setAttribute('content', title);
+  const ogDesc = document.getElementById('og-desc');
+  if(ogDesc) ogDesc.setAttribute('content', excerpt);
+  const ogImage = document.getElementById('og-image');
+  if(ogImage) ogImage.setAttribute('content', img);
+  const ogUrl = document.getElementById('og-url');
+  if(ogUrl) ogUrl.setAttribute('content', SITE + '/article.html?slug=' + encodeURIComponent(slug));
+
+  const link = SITE + '/article.html?slug=' + encodeURIComponent(slug);
+  const wa = 'https://wa.me/?text=' + encodeURIComponent('*' + title + '*\n\nLire ici : ' + link);
+  const fb = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link);
+
+  let html = '';
+  html += '<div class="card">';
+  html += '<img class="cover" src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '">';
+  html += '<div class="card-body">';
+  html += '<span class="badge">' + escapeHtml(String(category).toUpperCase()) + '</span>';
+  html += '<h2>' + escapeHtml(title) + '</h2>';
+  html += '<small>Par <b>' + escapeHtml(author) + '</b> • ' + datesHtml + '</small>';
+  if(excerpt){
+    html += '<p style="font-weight:600;color:#333">' + escapeHtml(excerpt) + '</p>';
+  }
+  html += '<div class="content">' + formatContenu(data.content || '') + '</div>';
+  html += '<div class="share">';
+  html += '<a class="btn-wa" href="' + wa + '" target="_blank" rel="noopener">💬 Partager sur WhatsApp</a>';
+  html += '<a class="btn-fb" href="' + fb + '" target="_blank" rel="noopener">📘 Facebook</a>';
+  html += '<button class="btn-copy" onclick="navigator.clipboard.writeText(\'' + link + '\').then(()=>alert(\'Lien copié !\'))">📋 Copier le lien</button>';
+  html += '<a class="btn-home" href="index.html">← Tous les articles</a>';
+  html += '</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
 }
 load();
 </script>
+</body>
+</html>
